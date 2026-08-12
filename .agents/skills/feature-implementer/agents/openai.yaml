@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Implementer"
+  short_description: "Implement one planned feature with evidence."
+  default_prompt: "Use $feature-implementer to implement the selected feature spec."
