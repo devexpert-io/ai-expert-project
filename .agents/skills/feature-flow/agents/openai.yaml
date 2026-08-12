@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Flow"
+  short_description: "Orchestrate planner implementer validator agents."
+  default_prompt: "Use $feature-flow for the next available feature."
