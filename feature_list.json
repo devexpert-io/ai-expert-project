@@ -1,0 +1,282 @@
+[
+  {
+    "id": "bootstrap-stack",
+    "area": "bootstrap",
+    "title": "Bootstrap técnico: Next.js + TypeScript + SQLite + pnpm",
+    "user_visible_behavior": "El repositorio arranca como app Next.js/TypeScript con pnpm y gate de calidad (lint, typecheck, tests) ejecutable desde init.sh.",
+    "depends_on": [],
+    "status": "not_started",
+    "verification": [
+      "pnpm install completa sin errores.",
+      "pnpm lint y pnpm typecheck pasan.",
+      "pnpm test ejecuta al menos un test de humo.",
+      "init.sh ejecuta la verificación base y sale correctamente."
+    ],
+    "evidence": [],
+    "notes": "Stack candidato en docs/technical-discovery.md: Next.js + TypeScript, SQLite vía ORM (Prisma o Drizzle), pnpm. Sin despliegue cloud en MVP. Al arrancar debe haber una app mínima ejecutable en local."
+  },
+  {
+    "id": "bootstrap-seed",
+    "area": "bootstrap",
+    "title": "Modelo de datos y seed del catálogo",
+    "user_visible_behavior": "Al iniciar la app se cargan categorías, productos y variantes (talla/color/stock/precio) de ejemplo en SQLite.",
+    "depends_on": ["bootstrap-stack"],
+    "status": "not_started",
+    "verification": [
+      "Las migraciones crean las tablas User, Product, Variant, Category, Cart/CartItem, Order, OrderLine, Chat, TryonImage.",
+      "El seed carga datos suficientes para demostrar catálogo, filtros y una compra.",
+      "Un test o script verifica que el catálogo quedó poblado tras el arranque."
+    ],
+    "evidence": [],
+    "notes": "Ver docs/domain-model.md (entidades y relaciones) y docs/technical-discovery.md (tablas). Seed data de ejemplo, sin datos reales de producto."
+  },
+  {
+    "id": "ai-provider-config",
+    "area": "ai",
+    "title": "Configuración del proveedor de IA por entorno",
+    "user_visible_behavior": "El proveedor/modelo de IA se configura por variables de entorno y sin clave la app degrada con un mensaje claro.",
+    "depends_on": ["bootstrap-stack"],
+    "status": "not_started",
+    "verification": [
+      "La ruta de proveedor/modelo es configurable por env (no cableada).",
+      "Existen .env y .env.example con DEVEXPERT_API_KEY.",
+      "Sin clave, las funciones de IA devuelven un mensaje de degradación controlado (sin romper)."
+    ],
+    "evidence": [],
+    "notes": "DevExpert Inference (https://inference.devexpert.io/v1), clave DEVEXPERT_API_KEY, cliente OpenAI-compatible. Manejo de límite semanal (429) en technical-discovery.md."
+  },
+  {
+    "id": "catalog-list",
+    "area": "catalog",
+    "title": "Listado de catálogo",
+    "user_visible_behavior": "El usuario ve una cuadrícula responsive de productos con imagen, nombre, categoría y precio.",
+    "depends_on": ["bootstrap-seed"],
+    "status": "not_started",
+    "verification": [
+      "La página de catálogo lista los productos del seed con nombre, imagen, categoría y precio.",
+      "La cuadrícula es responsive (1-2 columnas en móvil, 3-4 en escritorio)."
+    ],
+    "evidence": [],
+    "notes": "Referencia visual: DESIGN.md (grid de 12 columnas, cards de producto). Sin filtros ni ordenación todavía (features siguientes)."
+  },
+  {
+    "id": "catalog-filter",
+    "area": "catalog",
+    "title": "Filtrado del catálogo",
+    "user_visible_behavior": "El usuario filtra el listado por categoría, talla, color y rango de precio.",
+    "depends_on": ["catalog-list"],
+    "status": "not_started",
+    "verification": [
+      "Seleccionar una categoría reduce el listado solo a productos de esa categoría.",
+      "Filtrar por talla, color y precio reduce correctamente la lista.",
+      "Los filtros son combinables y muestran estado vacío coherente si no hay resultados."
+    ],
+    "evidence": [],
+    "notes": "Chips/píldoras de filtro según DESIGN.md. No cambia datos (ver docs/domain-model.md, escenario 'catálogo filtrado/ordenado')."
+  },
+  {
+    "id": "catalog-sort",
+    "area": "catalog",
+    "title": "Ordenación del catálogo",
+    "user_visible_behavior": "El usuario ordena el listado por precio, novedad o nombre.",
+    "depends_on": ["catalog-list"],
+    "status": "not_started",
+    "verification": [
+      "Ordenar por precio (asc/desc), novedad y nombre cambia el orden del listado.",
+      "La ordenación se combina con los filtros existentes."
+    ],
+    "evidence": [],
+    "notes": "Orden temporal sobre el listado; no cambia datos persistidos."
+  },
+  {
+    "id": "product-detail",
+    "area": "catalog",
+    "title": "Detalle de producto con selector de variante",
+    "user_visible_behavior": "El usuario ve la ficha del producto (imagen, descripción, precio) y selecciona talla/color viendo el stock disponible.",
+    "depends_on": ["catalog-list"],
+    "status": "not_started",
+    "verification": [
+      "La página de detalle muestra imagen, descripción, precio y las variantes disponibles.",
+      "Al elegir talla y color se muestra la variante correcta y su stock.",
+      "Una variante agotada se muestra como tal y no puede comprarse."
+    ],
+    "evidence": [],
+    "notes": "Estados de variante Disponible/Agotada en docs/domain-model.md. Aquí se ancla la prueba virtual (features tryon)."
+  },
+  {
+    "id": "chatbot-conversation",
+    "area": "chatbot",
+    "title": "Chatbot de consultas del catálogo",
+    "user_visible_behavior": "El usuario abre el chatbot, hace preguntas de la tienda/catálogo y recibe respuestas con contexto real del catálogo.",
+    "depends_on": ["ai-provider-config", "bootstrap-seed"],
+    "status": "not_started",
+    "verification": [
+      "El widget de chat se abre y permite enviar mensajes.",
+      "Las respuestas usan contexto del catálogo (datos coherentes).",
+      "Sin clave o con cupo agotado muestra un mensaje claro en vez de romper."
+    ],
+    "evidence": [],
+    "notes": "Modelo chat/chat-pro vía POST /chat/completions. Inyectar contexto del catálogo (o RAG) según technical-discovery.md. Widget flotante en DESIGN.md."
+  },
+  {
+    "id": "chatbot-recommend",
+    "area": "chatbot",
+    "title": "Recomendación de productos del chatbot",
+    "user_visible_behavior": "El chatbot recomienda productos/variantes válidos del catálogo ante peticiones del usuario.",
+    "depends_on": ["chatbot-conversation"],
+    "status": "not_started",
+    "verification": [
+      "Al pedir una recomendación, el chatbot devuelve productos/variantes existentes en el catálogo.",
+      "Las recomendaciones enlazan a productos navegables del catálogo."
+    ],
+    "evidence": [],
+    "notes": "Recomendación semántica opcional vía embeddings (POST /embeddings) o inyectando catálogo en el prompt (research task en risks-and-open-questions.md)."
+  },
+  {
+    "id": "tryon-upload",
+    "area": "tryon",
+    "title": "Subida de foto para la prueba virtual",
+    "user_visible_behavior": "En el detalle de producto el usuario sube una foto y ve la validación y el aviso de privacidad.",
+    "depends_on": ["product-detail"],
+    "status": "not_started",
+    "verification": [
+      "La página de detalle permite subir una foto con preview.",
+      "Una imagen no válida muestra un error controlado.",
+      "Se muestra aviso de privacidad antes de enviar la foto al proveedor."
+    ],
+    "evidence": [],
+    "notes": "La foto viaja a inference.devexpert.io; tratar como dato personal y no persistir innecesariamente (technical-discovery.md, risks)."
+  },
+  {
+    "id": "tryon-result",
+    "area": "tryon",
+    "title": "Generación y muestra del resultado de la prueba virtual",
+    "user_visible_behavior": "El usuario envía la foto y ve la prenda puesta generada sobre su imagen, o un error claro si falla.",
+    "depends_on": ["tryon-upload", "ai-provider-config"],
+    "status": "not_started",
+    "verification": [
+      "Al enviar la foto se genera y muestra la imagen con la prenda puesta.",
+      "El estado de procesamiento se muestra durante la generación.",
+      "Un fallo del proveedor (o cupo agotado) muestra un error controlado sin romper la página."
+    ],
+    "evidence": [],
+    "notes": "Edición de imagen vía POST /images/edits con modelo image-edit (multipart: foto + prompt de la prenda). Proveedor/modelo configurable. Estados Solicitado→Generado|Error en domain-model.md. Expectativas acotadas (riesgo alto en risks)."
+  },
+  {
+    "id": "cart-add",
+    "area": "cart",
+    "title": "Añadir variante al carrito",
+    "user_visible_behavior": "El usuario añade una variante al carrito con una cantidad, sin necesidad de cuenta, y el carrito persiste.",
+    "depends_on": ["product-detail"],
+    "status": "not_started",
+    "verification": [
+      "Añadir una variante con cantidad crea/actualiza un ítem en el carrito.",
+      "El carrito persiste entre recargas de página (invitado).",
+      "No se puede añadir una variante agotada."
+    ],
+    "evidence": [],
+    "notes": "Carrito persistente para invitados sin registro (docs/build-brief.md, domain-model.md). Persistencia local vs servidor: pregunta abierta en risks-and-open-questions.md."
+  },
+  {
+    "id": "cart-manage",
+    "area": "cart",
+    "title": "Página de carrito y gestión de cantidades",
+    "user_visible_behavior": "El usuario ve los ítems del carrito, ajusta cantidades y elimina ítems.",
+    "depends_on": ["cart-add"],
+    "status": "not_started",
+    "verification": [
+      "La página de carrito lista los ítems con variante, precio y cantidad.",
+      "Ajustar la cantidad y eliminar ítems actualiza el total.",
+      "El total del carrito es correcto."
+    ],
+    "evidence": [],
+    "notes": "Las cantidades se revalidan contra stock en el checkout (edge case en domain-model.md)."
+  },
+  {
+    "id": "checkout-review",
+    "area": "checkout",
+    "title": "Revisión del checkout y datos de contacto/envío",
+    "user_visible_behavior": "El usuario revisa el carrito y completa sus datos de contacto y envío antes de pagar.",
+    "depends_on": ["cart-manage"],
+    "status": "not_started",
+    "verification": [
+      "El checkout muestra el resumen del carrito y un formulario de contacto/envío.",
+      "El formulario valida los campos obligatorios.",
+      "Un invitado puede llegar a esta pantalla sin cuenta."
+    ],
+    "evidence": [],
+    "notes": "Flujo en docs/build-brief.md (slice MVP). El invitado llega a la puerta del checkout pero no se materializa pedido hasta crear usuario."
+  },
+  {
+    "id": "checkout-user",
+    "area": "checkout",
+    "title": "Creación de usuario en el checkout",
+    "user_visible_behavior": "Al pagar, el usuario crea su cuenta (email + contraseña) y queda autenticado con sesión.",
+    "depends_on": ["checkout-review"],
+    "status": "not_started",
+    "verification": [
+      "Al confirmar los datos se crea el usuario y se inicia sesión (cookie).",
+      "El carrito de invitado se asocia al nuevo usuario.",
+      "Un usuario existente puede iniciar sesión en lugar de crear cuenta."
+    ],
+    "evidence": [],
+    "notes": "Auth con credenciales email+password y hash (bcrypt) según technical-discovery.md. Edge case: carrito de invitado que crea cuenta persiste."
+  },
+  {
+    "id": "checkout-payment",
+    "area": "checkout",
+    "title": "Pago simulado y creación del pedido",
+    "user_visible_behavior": "El usuario paga con una pasarela simulada; el resultado (aprobado/rechazado) crea el pedido con el estado correcto.",
+    "depends_on": ["checkout-user"],
+    "status": "not_started",
+    "verification": [
+      "Pago aprobado crea un pedido en estado Pagado vinculado al usuario.",
+      "Pago rechazado deja el pedido Pendiente/Cancelado y permite reintentar.",
+      "El checkout valida el stock vigente antes de pagar."
+    ],
+    "evidence": [],
+    "notes": "Estados Pago Pendiente→Aprobado|Rechazado y Pedido Pendiente pago→Pagado|Cancelado en domain-model.md. Edge cases: stock cambiado entre carrito y pago."
+  },
+  {
+    "id": "orders-list",
+    "area": "orders",
+    "title": "Listado de pedidos del usuario",
+    "user_visible_behavior": "El usuario registrado ve la lista de sus pedidos con estado.",
+    "depends_on": ["checkout-payment"],
+    "status": "not_started",
+    "verification": [
+      "Un usuario registrado ve sus pedidos con estado tras una compra.",
+      "La lista solo muestra pedidos del usuario autenticado."
+    ],
+    "evidence": [],
+    "notes": "Pantalla 'mis pedidos' en DESIGN.md y slice MVP en build-brief.md."
+  },
+  {
+    "id": "orders-detail",
+    "area": "orders",
+    "title": "Detalle de un pedido",
+    "user_visible_behavior": "El usuario ve el detalle de un pedido con sus líneas (variante + cantidad) y estado.",
+    "depends_on": ["orders-list"],
+    "status": "not_started",
+    "verification": [
+      "El detalle de pedido muestra las líneas (variante, cantidad, precio) y el estado.",
+      "El total del pedido coincide con las líneas."
+    ],
+    "evidence": [],
+    "notes": "Entidad Pedido y LineaPedido en domain-model.md."
+  },
+  {
+    "id": "order-access-control",
+    "area": "orders",
+    "title": "Control de acceso a pedidos",
+    "user_visible_behavior": "Un invitado no puede ver pedidos y un usuario solo ve los suyos.",
+    "depends_on": ["orders-list"],
+    "status": "not_started",
+    "verification": [
+      "Un invitado que intenta ver pedidos es bloqueado o redirigido al checkout.",
+      "Un usuario no puede acceder a pedidos de otro usuario."
+    ],
+    "evidence": [],
+    "notes": "Los pedidos solo existen para usuarios creados en checkout (build-brief.md, technical-discovery.md). Edge case: crear pedido sin sesión bloqueado."
+  }
+]
