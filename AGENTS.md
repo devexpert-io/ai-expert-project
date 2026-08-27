@@ -24,6 +24,17 @@ Antes de escribir código:
 4. Ejecutar `./init.sh`.
 5. Si la verificación base falla, arreglar la base antes de añadir trabajo nuevo.
 
+## Stack y verificación estándar
+
+- Stack: Next.js (App Router) + TypeScript + SQLite (Prisma) + pnpm.
+- Arranque local: `pnpm dev`.
+- Gate de verificación (ejecutado por `./init.sh`, no bloqueante y sin dev servers):
+  - `pnpm install` (usa `--frozen-lockfile` si existe `pnpm-lock.yaml`),
+  - `pnpm lint`,
+  - `pnpm typecheck`,
+  - `pnpm test`,
+  - `pnpm build`.
+
 ## Reglas de trabajo
 
 - Trabajar en una feature a la vez.

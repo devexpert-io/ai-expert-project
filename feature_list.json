@@ -5,15 +5,24 @@
     "title": "Bootstrap técnico: Next.js + TypeScript + SQLite + pnpm",
     "user_visible_behavior": "El repositorio arranca como app Next.js/TypeScript con pnpm y gate de calidad (lint, typecheck, tests) ejecutable desde init.sh.",
     "depends_on": [],
-    "status": "not_started",
+    "status": "passing",
     "verification": [
       "pnpm install completa sin errores.",
       "pnpm lint y pnpm typecheck pasan.",
       "pnpm test ejecuta al menos un test de humo.",
       "init.sh ejecuta la verificación base y sale correctamente."
     ],
-    "evidence": [],
-    "notes": "Stack candidato en docs/technical-discovery.md: Next.js + TypeScript, SQLite vía ORM (Prisma o Drizzle), pnpm. Sin despliegue cloud en MVP. Al arrancar debe haber una app mínima ejecutable en local."
+    "evidence": [
+      "pnpm install -> OK (lockfile generado; next 15.5.24, react 19.2.8, prisma 6.19.3, vitest 3.2.7).",
+      "pnpm lint -> exit 0 (ESLint 9 flat config + eslint-config-next).",
+      "pnpm typecheck -> exit 0 (tsc --noEmit).",
+      "pnpm test -> exit 0 (1 test de humo de la home en Vitest/jsdom).",
+      "pnpm build -> exit 0 (Next.js 15.5.24, build estático OK).",
+      "pnpm exec prisma validate -> exit 0 (schema.prisma con datasource SQLite válido).",
+      "./init.sh -> exit 0 (install + lint + typecheck + test + build, sin dev servers).",
+      "pnpm dev -> home responde HTTP 200 ('Tienda de ropa')."
+    ],
+    "notes": "Stack: Next.js (App Router) + TypeScript + SQLite (Prisma) + pnpm. ORM decidido: Prisma v6 con DATABASE_URL=file:./dev.db; datasource mínimo sin modelos (modelos en bootstrap-seed). init.sh reescrito a gate real no bloqueante. Docs creados: ARCHITECTURE.md, CONSTRAINTS.md."
   },
   {
     "id": "bootstrap-seed",

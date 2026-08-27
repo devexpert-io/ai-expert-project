@@ -8,7 +8,7 @@ Web app responsive (móvil + escritorio). El foco es el navegador; sin apps nati
 
 - **Frontend/Backend**: Next.js (React) con API routes / server actions. Monolito simple.
 - **Lenguaje**: TypeScript.
-- **Persistencia**: SQLite (vía ORM tipo Prisma o Drizzle). Cero configuración externa; se ajusta al requisito de lanzar en local con un comando.
+- **Persistencia**: SQLite vía **Prisma** (decisión tomada; ver `ARCHITECTURE.md`). Cero configuración externa; se ajusta al requisito de lanzar en local con un comando. `DATABASE_URL="file:./dev.db"`.
 - **Seed data**: carga de catálogo/modelo al iniciar.
 
 ## Data and Storage

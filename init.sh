@@ -1,16 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "Repositorio: $(pwd)"
-echo "Estado del harness: pre-bootstrap"
-echo "El stack de la aplicación aún no está inicializado."
+echo "==> Repositorio: $(pwd)"
+
+echo "==> Verificando requisitos (node / pnpm)"
+command -v node >/dev/null 2>&1 || { echo "Error: node no encontrado."; exit 1; }
+command -v pnpm >/dev/null 2>&1 || { echo "Error: pnpm no encontrado."; exit 1; }
+echo "    node $(node --version) / pnpm $(pnpm --version)"
+
+echo "==> Instalando dependencias"
+if [ -f pnpm-lock.yaml ]; then
+  pnpm install --frozen-lockfile
+else
+  pnpm install
+fi
+
+echo "==> Lint"
+pnpm lint
+
+echo "==> Typecheck"
+pnpm typecheck
+
+echo "==> Tests"
+pnpm test
+
+echo "==> Build"
+pnpm build
+
 echo ""
-echo "Siguiente paso: elegir la primera feature de feature_list.json"
-echo "  (bootstrap-stack) y realizar el bootstrap técnico."
-echo ""
-echo "Comandos futuros esperados (pendientes de crear tras el bootstrap):"
-echo "  pnpm install     # instalar dependencias"
-echo "  pnpm dev         # arrancar en local"
-echo "  pnpm lint        # lint"
-echo "  pnpm typecheck   # typecheck"
-echo "  pnpm test        # tests"
+echo "Verificación base OK."
+echo "Para arrancar en local: pnpm dev"
