@@ -41,4 +41,4 @@
 
 - Investigar cómo lograr el mejor resultado de **try-on** con el endpoint de edición (`image-edit`, multipart con foto + prompt de la prenda) de DevExpert Inference, y cómo acotar expectativas realistas.
 - Confirmar si conviene **RAG con embeddings** (`embedding`, `POST /embeddings`) para que el chatbot recomiende productos de forma semántica, o basta con inyectar contexto del catálogo en el prompt.
-- Decidir ORM y configuración SQLite para arrancar en local con `pnpm`.
+- Decidir ORM y configuración SQLite para arrancar en local con `pnpm`. **Resuelto (bootstrap-stack)**: Prisma v6 + SQLite (`DATABASE_URL="file:./dev.db"`), datasource mínimo cableado; modelos/migraciones en `bootstrap-seed`.
