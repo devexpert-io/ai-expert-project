@@ -5,7 +5,7 @@
     "title": "Bootstrap técnico: Next.js + TypeScript + SQLite + pnpm",
     "user_visible_behavior": "El repositorio arranca como app Next.js/TypeScript con pnpm y gate de calidad (lint, typecheck, tests) ejecutable desde init.sh.",
     "depends_on": [],
-    "status": "passing",
+    "status": "accepted",
     "verification": [
       "pnpm install completa sin errores.",
       "pnpm lint y pnpm typecheck pasan.",
