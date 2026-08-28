@@ -49,39 +49,142 @@ export default function CatalogFilters({
       aria-labelledby="catalog-filters-title"
       className={styles.filtersSection}
     >
-      <div className={styles.filtersHeader}>
-        <h2 className={styles.filtersTitle} id="catalog-filters-title">
-          Filtrar catálogo
-        </h2>
-        <p
-          aria-live="polite"
-          className={styles.filterSummary}
-          role="status"
-        >
-          {filters.priceRangeInvalid
-            ? "Corrige el rango de precio para ver resultados."
-            : `${resultCount} ${resultCount === 1 ? "producto" : "productos"}${resultCount > 0 ? " encontrados" : ""}.`}
-        </p>
-      </div>
-
       <form action="/" className={styles.filterForm} method="get">
-        <div className={styles.filterFields}>
-          <div className={styles.filterControl}>
-            <label htmlFor="catalog-category">Categoría</label>
-            <select
-              className={styles.select}
-              defaultValue={filters.categorySlug ?? ""}
-              id="catalog-category"
-              name="category"
-            >
-              <option value="">Todas las categorías</option>
-              {options.categories.map((category) => (
-                <option key={category.slug} value={category.slug}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+        <div className={styles.filterToolbar}>
+          <div className={styles.filterLead}>
+            <span aria-hidden="true" className={styles.filterIcon} />
+            <div>
+              <h2 className={styles.filtersTitle} id="catalog-filters-title">
+                Filtrar<span className={styles.srOnly}> catálogo</span>
+              </h2>
+              <p
+                aria-live="polite"
+                className={styles.filterSummary}
+                role="status"
+              >
+                {filters.priceRangeInvalid
+                  ? "Corrige el rango de precio para ver resultados."
+                  : `${resultCount} ${resultCount === 1 ? "producto" : "productos"}${resultCount > 0 ? " encontrados" : ""}.`}
+              </p>
+            </div>
           </div>
+
+          <details className={styles.filterMenu}>
+            <summary>Categoría</summary>
+            <div className={styles.filterPanel}>
+              <div className={styles.filterControl}>
+                <label htmlFor="catalog-category">Categoría</label>
+                <select
+                  className={styles.select}
+                  defaultValue={filters.categorySlug ?? ""}
+                  id="catalog-category"
+                  name="category"
+                >
+                  <option value="">Todas las categorías</option>
+                  {options.categories.map((category) => (
+                    <option key={category.slug} value={category.slug}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <details className={styles.filterMenu}>
+            <summary>Talla</summary>
+            <div className={styles.filterPanel}>
+              <fieldset className={styles.filterFieldset}>
+                <legend>Talla</legend>
+                <div className={styles.chipList}>
+                  {options.sizes.map((size) => (
+                    <label className={styles.chip} key={size}>
+                      <input
+                        defaultChecked={filters.size === size}
+                        name="size"
+                        type="radio"
+                        value={size}
+                      />
+                      <span>{size}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </div>
+          </details>
+
+          <details className={styles.filterMenu}>
+            <summary>Color</summary>
+            <div className={`${styles.filterPanel} ${styles.colorPanel}`}>
+              <fieldset className={styles.filterFieldset}>
+                <legend>Color</legend>
+                <div className={styles.chipList}>
+                  {options.colors.map((color) => (
+                    <label className={styles.chip} key={color}>
+                      <input
+                        defaultChecked={filters.color === color}
+                        name="color"
+                        type="radio"
+                        value={color}
+                      />
+                      <span>{color}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </div>
+          </details>
+
+          <details className={styles.filterMenu}>
+            <summary>Precio</summary>
+            <div className={`${styles.filterPanel} ${styles.pricePanel}`}>
+              <fieldset className={styles.filterFieldset}>
+                <legend>Precio</legend>
+                <p className={styles.priceHelp} id="catalog-price-help">
+                  {minimumPrice && maximumPrice
+                    ? `Entre ${minimumPrice} y ${maximumPrice}.`
+                    : "Introduce un precio en euros."}
+                </p>
+                <div className={styles.priceFields}>
+                  <label className={styles.priceControl} htmlFor="catalog-min-price">
+                    <span>Mínimo</span>
+                    <input
+                      aria-describedby="catalog-price-help"
+                      className={styles.numberInput}
+                      defaultValue={formatPriceInput(filters.minPriceCents)}
+                      id="catalog-min-price"
+                      inputMode="decimal"
+                      min="0"
+                      name="minPrice"
+                      placeholder="19.90"
+                      step="0.01"
+                      type="number"
+                    />
+                  </label>
+                  <label className={styles.priceControl} htmlFor="catalog-max-price">
+                    <span>Máximo</span>
+                    <input
+                      aria-describedby="catalog-price-help"
+                      className={styles.numberInput}
+                      defaultValue={formatPriceInput(filters.maxPriceCents)}
+                      id="catalog-max-price"
+                      inputMode="decimal"
+                      min="0"
+                      name="maxPrice"
+                      placeholder="89.90"
+                      step="0.01"
+                      type="number"
+                    />
+                  </label>
+                </div>
+                {filters.priceRangeInvalid ? (
+                  <p className={styles.filterError} role="alert">
+                    El precio mínimo no puede superar al máximo.
+                  </p>
+                ) : null}
+              </fieldset>
+            </div>
+          </details>
 
           <div className={`${styles.filterControl} ${styles.sortControl}`}>
             <label htmlFor="catalog-sort">Ordenar por</label>
@@ -98,95 +201,16 @@ export default function CatalogFilters({
               ))}
             </select>
           </div>
-
-          <fieldset className={styles.filterFieldset}>
-            <legend>Talla</legend>
-            <div className={styles.chipList}>
-              {options.sizes.map((size) => (
-                <label className={styles.chip} key={size}>
-                  <input
-                    defaultChecked={filters.size === size}
-                    name="size"
-                    type="radio"
-                    value={size}
-                  />
-                  <span>{size}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className={styles.filterFieldset}>
-            <legend>Color</legend>
-            <div className={styles.chipList}>
-              {options.colors.map((color) => (
-                <label className={styles.chip} key={color}>
-                  <input
-                    defaultChecked={filters.color === color}
-                    name="color"
-                    type="radio"
-                    value={color}
-                  />
-                  <span>{color}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className={styles.filterFieldset}>
-            <legend>Precio</legend>
-            <p className={styles.priceHelp} id="catalog-price-help">
-              {minimumPrice && maximumPrice
-                ? `Entre ${minimumPrice} y ${maximumPrice}.`
-                : "Introduce un precio en euros."}
-            </p>
-            <div className={styles.priceFields}>
-              <label className={styles.priceControl} htmlFor="catalog-min-price">
-                <span>Mínimo</span>
-                <input
-                  aria-describedby="catalog-price-help"
-                  className={styles.numberInput}
-                  defaultValue={formatPriceInput(filters.minPriceCents)}
-                  id="catalog-min-price"
-                  inputMode="decimal"
-                  min="0"
-                  name="minPrice"
-                  placeholder="19.90"
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-              <label className={styles.priceControl} htmlFor="catalog-max-price">
-                <span>Máximo</span>
-                <input
-                  aria-describedby="catalog-price-help"
-                  className={styles.numberInput}
-                  defaultValue={formatPriceInput(filters.maxPriceCents)}
-                  id="catalog-max-price"
-                  inputMode="decimal"
-                  min="0"
-                  name="maxPrice"
-                  placeholder="89.90"
-                  step="0.01"
-                  type="number"
-                />
-              </label>
-            </div>
-            {filters.priceRangeInvalid ? (
-              <p className={styles.filterError} role="alert">
-                El precio mínimo no puede superar al máximo.
-              </p>
-            ) : null}
-          </fieldset>
-        </div>
-
-        <div className={styles.filterActions}>
-          <button className={styles.applyButton} type="submit">
-            Aplicar filtros
-          </button>
-          <Link className={styles.clearLink} href="/">
-            Limpiar filtros
-          </Link>
+          <div className={styles.filterActions}>
+            <button className={styles.applyButton} type="submit">
+              Aplicar
+              <span className={styles.srOnly}> filtros</span>
+            </button>
+            <Link className={styles.clearLink} href="/">
+              Limpiar
+              <span className={styles.srOnly}> filtros</span>
+            </Link>
+          </div>
         </div>
       </form>
     </section>

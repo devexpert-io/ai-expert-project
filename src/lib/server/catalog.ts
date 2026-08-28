@@ -16,6 +16,8 @@ export type CatalogProduct = Readonly<{
   imageUrl: string;
   basePriceCents: number;
   categoryName: string;
+  sizes: readonly string[];
+  colors: readonly string[];
 }>;
 
 export async function getCatalogProducts(
@@ -70,12 +72,20 @@ export async function getCatalogProducts(
           name: true,
         },
       },
+      variants: {
+        select: {
+          size: true,
+          color: true,
+        },
+      },
     },
   });
 
-  return products.map(({ category, ...product }) => ({
+  return products.map(({ category, variants, ...product }) => ({
     ...product,
     categoryName: category.name,
+    sizes: sortUniqueValues(variants.map((variant) => variant.size)),
+    colors: sortUniqueValues(variants.map((variant) => variant.color)),
   }));
 }
 

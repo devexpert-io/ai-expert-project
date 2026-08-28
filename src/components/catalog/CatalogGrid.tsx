@@ -6,6 +6,19 @@ import type { CatalogProduct } from "../../lib/server/catalog";
 
 import styles from "./catalog.module.css";
 
+const colorSwatches: Readonly<Record<string, string>> = {
+  Arena: "#cbb99d",
+  Azul: "#65778a",
+  Beige: "#d7c6aa",
+  Blanco: "#f0ede5",
+  Gris: "#8b8a85",
+  Kaki: "#737259",
+  Marino: "#27323c",
+  Negro: "#1d1b18",
+  Rojo: "#99493d",
+  Verde: "#5d6b52",
+};
+
 export function formatCatalogPrice(priceCents: number): string {
   return formatPrice(priceCents);
 }
@@ -28,8 +41,12 @@ export default function CatalogGrid({
   }
 
   return (
-    <ul className={styles.grid} aria-label="Productos del catálogo">
-      {products.map((product) => (
+    <ul
+      className={styles.grid}
+      aria-label="Productos del catálogo"
+      id="catalog-results"
+    >
+      {products.map((product, index) => (
         <li className={styles.gridItem} key={product.id}>
           <article className={styles.card}>
             <Link
@@ -47,11 +64,36 @@ export default function CatalogGrid({
                 />
               </div>
               <div className={styles.cardBody}>
-                <p className={styles.category}>{product.categoryName}</p>
-                <h2 className={styles.name}>{product.name}</h2>
-                <p className={styles.price}>
-                  {formatCatalogPrice(product.basePriceCents)}
-                </p>
+                <div className={styles.cardMeta}>
+                  <p className={styles.category}>{product.categoryName}</p>
+                  <span className={styles.productIndex} aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.name}>{product.name}</h2>
+                  <p className={styles.price}>
+                    {formatCatalogPrice(product.basePriceCents)}
+                  </p>
+                </div>
+                <div className={styles.variantMeta}>
+                  <span
+                    aria-label={`Colores: ${product.colors.join(", ")}`}
+                    className={styles.swatchList}
+                    role="img"
+                  >
+                    {product.colors.slice(0, 4).map((color) => (
+                      <span
+                        className={styles.swatch}
+                        key={color}
+                        style={{ backgroundColor: colorSwatches[color] ?? "#a39d93" }}
+                      />
+                    ))}
+                  </span>
+                  <span className={styles.sizeList}>
+                    {product.sizes.join("  ")}
+                  </span>
+                </div>
               </div>
             </Link>
           </article>

@@ -31,6 +31,8 @@ const products = [
     imageUrl: "https://placehold.co/800x1000/png?text=camiseta-basica",
     basePriceCents: 1990,
     categoryName: "Camisetas",
+    sizes: ["S", "M", "L", "XL"],
+    colors: ["Negro", "Blanco", "Azul"],
   },
   {
     id: "product-2",
@@ -39,6 +41,8 @@ const products = [
     imageUrl: "https://placehold.co/800x1000/png?text=abrigo-ligero",
     basePriceCents: 8990,
     categoryName: "Abrigos",
+    sizes: ["S", "M", "L", "XL"],
+    colors: ["Arena", "Verde", "Marino"],
   },
 ] as const;
 

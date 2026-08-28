@@ -3,22 +3,23 @@ name: Tienda de ropa (e-commerce)
 description: Dirección visual inicial para una tienda de ropa responsive con catálogo, detalle, carrito y funciones de IA.
 designAssets:
   sourceOfTruth: []
-  generatedConcepts: []
+  generatedConcepts:
+    - "docs/design/catalog-editorial-reference.webp"
 colors:
-  primary: "#111827"
-  secondary: "#4B5563"
-  accent: "#D97706"
-  background: "#FFFFFF"
-  surface: "#F3F4F6"
-  text: "#111827"
-  textMuted: "#6B7280"
-  success: "#16A34A"
-  danger: "#DC2626"
+  primary: "#1D1B18"
+  secondary: "#665F57"
+  accent: "#9C4F35"
+  background: "#F7F4ED"
+  surface: "#EDE8DE"
+  text: "#1D1B18"
+  textMuted: "#665F57"
+  success: "#3F5C3F"
+  danger: "#8B2C22"
 typography:
   h1:
-    fontFamily: Inter, system-ui, -apple-system, Segoe UI, sans-serif
-    fontSize: 28px
-    fontWeight: 700
+    fontFamily: Georgia, Times New Roman, serif
+    fontSize: clamp(48px, 8vw, 136px)
+    fontWeight: 400
   h2:
     fontFamily: Inter, system-ui, -apple-system, Segoe UI, sans-serif
     fontSize: 20px
@@ -49,34 +50,36 @@ components:
 
 ## Overview
 
-Tienda de ropa moderna y limpia. El producto protagoniza: fotografía grande, jerarquía clara y navegación sencilla. Estética minimalista y atemporal, con un color de acento cálido para acciones y destacados de IA. Esta es dirección inicial; no hay assets de marca previos.
+Tienda editorial cálida y contemporánea. El producto protagoniza mediante fotografía grande, jerarquía tipográfica expresiva y controles sobrios. La interfaz combina marfil, terracota, tinta y oliva; usa serif editorial para titulares y sans-serif para datos y acciones. La función sigue siendo evidente y accesible sin parecer un panel administrativo.
 
 ## Existing Design Assets
 
-No hay. Se parte de cero con esta dirección.
+- `docs/design/catalog-editorial-reference.webp`: concepto de catálogo generado con ImageGen; referencia de composición, tono y jerarquía, no captura contractual pixel-perfect.
+- `public/storefront-hero.webp`: fotografía panorámica derivada de la referencia para reproducir su composición sin incrustar texto ni controles en la imagen.
+- `public/products/*.webp`: seis fotografías editoriales de producto generadas con ImageGen, una por producto sembrado.
 
 ## Generated Concept Images
 
-No se han generado conceptos aún. Opcional: generar 1-3 conceptos (listado, detalle, try-on) con `imagegen` y marcarlos como inspiración antes de lockear la UI.
+El concepto `catalog-editorial-reference.webp` fija la narrativa visual: cabecera ligera, hero dividido en terracota y fotografía, filtros compactos y grid de moda aireado. La implementación adapta esa referencia a la semántica y funcionalidad reales del repositorio.
 
 ## Product Feel
 
-- Limpio, airy, confiable. Mucho espacio en blanco y superficies suaves.
+- Editorial, cálido y confiable. Mucho espacio negativo y superficies marfil.
 - La ropa es la estrella: imágenes grandes y nítidas.
-- Tono tranquilo con toques cálidos (amarillo/gold) para CTA y elementos de IA.
-- Sensación de comercio online moderno (referencia de referencia: concepto tipo vogue/modern minimal).
+- Tono tranquilo con terracota para identidad y oliva para estados positivos.
+- Sensación de estudio de moda europeo contemporáneo sin clichés de lujo negro.
 
 ## Colors
 
-- **Primary** negro azulado (`#111827`): texto y acciones principales (botones principales).
-- **Secondary** gris (`#4B5563`) / **Text muted** (`#6B7280`): textos secundarios.
-- **Accent** `#D97706` (ámbar): destacados, ofertas, y elementos vinculados a IA.
-- **Surfaces**: fondo blanco, superficies gris claro `#F3F4F6` (tarjetas, inputs).
-- **Éxito/Error**: verde `#16A34A` / rojo `#DC2626` para stock y estados de pedido.
+- **Primary** tinta (`#1D1B18`): texto y acciones principales.
+- **Secondary** gris cálido (`#665F57`): textos secundarios.
+- **Accent** terracota (`#9C4F35`): hero e identidad editorial.
+- **Surfaces**: fondo marfil `#F7F4ED` y superficie arena `#EDE8DE`.
+- **Éxito/Error**: oliva `#3F5C3F` / rojo óxido `#8B2C22`.
 
 ## Typography
 
-- Familia: Inter (sistema). Títulos con pesos 600-700, cuerpo 400 a 16px.
+- Familias: Georgia/Times para titulares editoriales e Inter/sistema para UI y cuerpo.
 - Jerarquía clara: `h1` para página, `h2` para secciones, cuerpo para contenido.
 
 ## Layout
