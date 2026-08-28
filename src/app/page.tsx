@@ -1,3 +1,6 @@
+import Image from "next/image";
+import Link from "next/link";
+
 import CatalogFilters from "../components/catalog/CatalogFilters";
 import CatalogGrid from "../components/catalog/CatalogGrid";
 import {
@@ -33,11 +36,33 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <main className="catalog-page">
       <header className="catalog-header">
-        <p className="catalog-eyebrow">Tienda de ropa</p>
-        <h1 className="catalog-title">Catálogo</h1>
-        <p className="catalog-intro">
-          Descubre prendas pensadas para acompañarte todos los días.
-        </p>
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="catalog-hero-image"
+          fill
+          priority
+          sizes="100vw"
+          src="/storefront-hero.webp"
+        />
+        <div className="catalog-hero-copy">
+          <p className="catalog-eyebrow">Catálogo</p>
+          <h1 className="catalog-title">
+            Nueva temporada
+          </h1>
+          <p className="catalog-intro">
+            Piezas esenciales, formas atemporales y materiales ligeros para el
+            día a día.
+          </p>
+        </div>
+        <Link
+          aria-label="Ver Abrigo ligero, pieza destacada"
+          className="catalog-hero-product"
+          href="/products/abrigo-ligero"
+        >
+          <span>Pieza destacada</span>
+          Abrigo ligero · 89,90 €
+        </Link>
       </header>
       <CatalogFilters
         filters={filters}

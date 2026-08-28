@@ -84,7 +84,7 @@ export default function ProductDetail({
   return (
     <main className={styles.page}>
       <Link className={styles.backLink} href="/">
-        Volver al catálogo
+        <span aria-hidden="true">←</span> Volver al catálogo
       </Link>
       <article className={styles.detail}>
         <div className={styles.imageFrame}>
@@ -99,10 +99,14 @@ export default function ProductDetail({
         </div>
 
         <div className={styles.information}>
-          <p className={styles.category}>{product.categoryName}</p>
+          <div className={styles.metaLine}>
+            <p className={styles.category}>{product.categoryName}</p>
+            <p className={styles.edition}>Edición 01</p>
+          </div>
           <h1 className={styles.title}>{product.name}</h1>
           <p className={styles.description}>{product.description}</p>
           <p className={styles.price}>{formatPrice(displayedPrice)}</p>
+          <p className={styles.taxNote}>Impuestos incluidos · Envío calculado más adelante</p>
 
           <form
             action={`/products/${product.slug}`}

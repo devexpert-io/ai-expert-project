@@ -30,7 +30,7 @@ const productFixture = [
     slug: "camiseta-basica",
     name: "Camiseta básica",
     description: "Camiseta de algodón de corte regular y tacto suave.",
-    imageUrl: "https://placehold.co/800x1000/png?text=camiseta-basica",
+    imageUrl: "/products/camiseta-basica.webp",
     basePriceCents: 1990,
     categorySlug: "camisetas",
     variants: [
@@ -44,7 +44,7 @@ const productFixture = [
     slug: "camiseta-rayas",
     name: "Camiseta de rayas",
     description: "Camiseta de punto ligero con rayas marineras.",
-    imageUrl: "https://placehold.co/800x1000/png?text=camiseta-rayas",
+    imageUrl: "/products/camiseta-rayas.webp",
     basePriceCents: 2490,
     categorySlug: "camisetas",
     variants: [
@@ -58,7 +58,7 @@ const productFixture = [
     slug: "pantalon-recto",
     name: "Pantalón recto",
     description: "Pantalón de sarga con pernera recta y cinco bolsillos.",
-    imageUrl: "https://placehold.co/800x1000/png?text=pantalon-recto",
+    imageUrl: "/products/pantalon-recto.webp",
     basePriceCents: 4990,
     categorySlug: "pantalones",
     variants: [
@@ -72,7 +72,7 @@ const productFixture = [
     slug: "pantalon-cargo",
     name: "Pantalón cargo",
     description: "Pantalón cargo resistente con bolsillos laterales amplios.",
-    imageUrl: "https://placehold.co/800x1000/png?text=pantalon-cargo",
+    imageUrl: "/products/pantalon-cargo.webp",
     basePriceCents: 5990,
     categorySlug: "pantalones",
     variants: [
@@ -86,7 +86,7 @@ const productFixture = [
     slug: "abrigo-ligero",
     name: "Abrigo ligero",
     description: "Abrigo impermeable y ligero para entretiempo.",
-    imageUrl: "https://placehold.co/800x1000/png?text=abrigo-ligero",
+    imageUrl: "/products/abrigo-ligero.webp",
     basePriceCents: 8990,
     categorySlug: "abrigos",
     variants: [
@@ -100,7 +100,7 @@ const productFixture = [
     slug: "sudadera-con-capucha",
     name: "Sudadera con capucha",
     description: "Sudadera de felpa con capucha y bolsillo delantero.",
-    imageUrl: "https://placehold.co/800x1000/png?text=sudadera-con-capucha",
+    imageUrl: "/products/sudadera-con-capucha.webp",
     basePriceCents: 5490,
     categorySlug: "sudaderas",
     variants: [

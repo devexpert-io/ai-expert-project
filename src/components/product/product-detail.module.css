@@ -1,8 +1,8 @@
 .page {
-  min-height: 100vh;
+  min-height: calc(100vh - 72px);
   margin: 0 auto;
-  max-width: 1200px;
-  padding: 32px var(--page-gutter) 72px;
+  max-width: 1600px;
+  padding: 24px var(--page-gutter) 88px;
 }
 
 .backLink,
@@ -10,24 +10,31 @@
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  color: var(--color-primary, #111827);
-  font-weight: 600;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.backLink:hover,
+.clearLink:hover {
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 5px;
 }
 
 .detail {
   display: grid;
-  gap: 32px;
-  margin-top: 24px;
+  gap: 36px;
+  margin-top: 20px;
 }
 
 .imageFrame {
   position: relative;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  border-radius: 10px;
-  background: var(--color-surface, #f3f4f6);
+  background: #e6dfd4;
 }
 
 .image {
@@ -38,53 +45,80 @@
   align-self: start;
 }
 
-.category {
-  margin: 0 0 8px;
-  color: var(--color-secondary, #4b5563);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+.metaLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.category,
+.edition {
+  margin: 0;
+  color: var(--color-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
+.edition {
+  color: var(--color-accent-dark);
+}
+
 .title {
+  max-width: 10ch;
   margin: 0;
-  color: var(--color-primary, #111827);
-  font-size: clamp(1.75rem, 4vw, 2.25rem);
-  line-height: 1.2;
+  font-family: var(--font-editorial);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
 }
 
 .description {
-  margin: 16px 0 0;
-  color: var(--color-secondary, #4b5563);
+  max-width: 34rem;
+  margin: 24px 0 0;
+  color: var(--color-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
 .price {
-  margin: 20px 0 0;
-  color: var(--color-primary, #111827);
-  font-size: 1.5rem;
-  font-weight: 700;
+  margin: 30px 0 0;
+  font-family: var(--font-editorial);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.taxNote {
+  margin: 8px 0 0;
+  color: var(--color-secondary);
+  font-size: 0.75rem;
 }
 
 .form {
   display: grid;
-  gap: 24px;
-  margin-top: 32px;
-  border-top: 1px solid var(--color-border, #e5e7eb);
-  padding-top: 24px;
+  gap: 26px;
+  margin-top: 34px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 28px;
 }
 
 .fieldset {
   display: grid;
-  gap: 12px;
+  gap: 13px;
   margin: 0;
   border: 0;
   padding: 0;
 }
 
 .fieldset legend {
-  color: var(--color-primary, #111827);
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .options {
@@ -96,7 +130,7 @@
 .option {
   position: relative;
   display: inline-flex;
-  min-height: 44px;
+  min-height: 46px;
   align-items: stretch;
   cursor: pointer;
 }
@@ -112,43 +146,47 @@
 
 .option span {
   display: inline-flex;
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 46px;
+  min-width: 48px;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid #9ca3af;
-  border-radius: 999px;
-  background: #ffffff;
-  color: var(--color-primary, #111827);
-  padding: 8px 14px;
+  border: 1px solid #aaa195;
+  border-radius: 0;
+  background: transparent;
+  padding: 9px 15px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.option:hover span {
+  border-color: var(--color-primary);
 }
 
 .option input:checked + span {
-  border-color: var(--color-primary, #111827);
-  background: var(--color-primary, #111827);
-  color: #ffffff;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fffaf2;
 }
 
 .option input:focus-visible + span,
 .applyButton:focus-visible,
 .backLink:focus-visible,
 .clearLink:focus-visible {
-  outline: 3px solid #d97706;
-  outline-offset: 2px;
+  outline: 3px solid #c4714e;
+  outline-offset: 3px;
 }
 
 .option input:disabled + span {
   border-style: dashed;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #e9e4da;
+  color: #6f6961;
   cursor: not-allowed;
   text-decoration: line-through;
 }
 
 .optionState {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -156,44 +194,79 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 16px;
+  gap: 12px 20px;
 }
 
 .applyButton {
-  min-height: 44px;
-  border: 1px solid var(--color-primary, #111827);
-  border-radius: 6px;
-  background: var(--color-primary, #111827);
-  color: #ffffff;
+  min-height: 50px;
+  border: 1px solid var(--color-primary);
+  border-radius: 0;
+  background: var(--color-primary);
+  color: #fffaf2;
   cursor: pointer;
   font: inherit;
-  font-weight: 600;
-  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 11px 22px;
+}
+
+.applyButton:hover {
+  border-color: var(--color-accent-dark);
+  background: var(--color-accent-dark);
+}
+
+.clearLink {
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .status {
-  margin: 24px 0 0;
-  border-radius: 6px;
-  background: var(--color-surface, #f3f4f6);
-  font-weight: 600;
-  padding: 16px;
+  margin: 26px 0 0;
+  border-left: 3px solid currentcolor;
+  background: #ede8de;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 15px 17px;
 }
 
 .available {
-  color: #166534;
+  color: #3f5c3f;
 }
 
 .soldOut {
-  color: #b91c1c;
+  color: #8b2c22;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 800px) {
   .page {
-    padding-top: 48px;
+    padding-top: 32px;
   }
 
   .detail {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px;
+    grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
+    gap: clamp(48px, 7vw, 112px);
+  }
+
+  .information {
+    position: sticky;
+    top: 32px;
+    padding-top: clamp(28px, 5vw, 72px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .page {
+    padding-bottom: 120px;
+  }
+
+  .imageFrame {
+    min-height: 760px;
+    aspect-ratio: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option span {
+    transition: none;
   }
 }

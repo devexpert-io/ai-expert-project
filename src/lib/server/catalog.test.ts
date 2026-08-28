@@ -43,6 +43,11 @@ describe("getCatalogProducts", () => {
         imageUrl: "https://placehold.co/800x1000/png?text=camiseta-basica",
         basePriceCents: 1990,
         category: { name: "Camisetas" },
+        variants: [
+          { size: "S", color: "Negro" },
+          { size: "M", color: "Negro" },
+          { size: "L", color: "Blanco" },
+        ],
       },
     ]);
 
@@ -54,6 +59,8 @@ describe("getCatalogProducts", () => {
         imageUrl: "https://placehold.co/800x1000/png?text=camiseta-basica",
         basePriceCents: 1990,
         categoryName: "Camisetas",
+        sizes: ["L", "M", "S"],
+        colors: ["Blanco", "Negro"],
       },
     ]);
 
@@ -69,6 +76,12 @@ describe("getCatalogProducts", () => {
         category: {
           select: {
             name: true,
+          },
+        },
+        variants: {
+          select: {
+            size: true,
+            color: true,
           },
         },
       },
@@ -116,6 +129,12 @@ describe("getCatalogProducts", () => {
         category: {
           select: {
             name: true,
+          },
+        },
+        variants: {
+          select: {
+            size: true,
+            color: true,
           },
         },
       },

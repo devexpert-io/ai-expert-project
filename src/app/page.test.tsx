@@ -13,6 +13,7 @@ vi.mock("../lib/server/catalog", () => ({
 vi.mock("next/image", () => ({
   default: ({
     fill,
+    priority,
     sizes,
     alt,
     ...props
@@ -20,10 +21,12 @@ vi.mock("next/image", () => ({
     alt: string;
     className?: string;
     fill?: boolean;
+    priority?: boolean;
     sizes?: string;
     src: string;
   }) => {
     void fill;
+    void priority;
     void sizes;
     return createElement("img", { ...props, alt });
   },
@@ -48,6 +51,8 @@ describe("Home", () => {
         imageUrl: "https://placehold.co/800x1000/png?text=camiseta-basica",
         basePriceCents: 1990,
         categoryName: "Camisetas",
+        sizes: ["S", "M", "L", "XL"],
+        colors: ["Negro", "Blanco", "Azul"],
       },
     ]);
 
@@ -55,7 +60,7 @@ describe("Home", () => {
 
     expect(screen.getByRole("main")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Catálogo",
+      "Nueva temporada",
     );
     expect(
       screen.getByRole("heading", { name: "Filtrar catálogo" }),
