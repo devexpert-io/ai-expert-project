@@ -41,6 +41,11 @@ que `catalog.ts` construya el `where` Prisma con condiciones AND.
 La ordenación sigue la misma frontera: `catalog-sort.ts` reduce `sort` a una
 unión cerrada y `catalog.ts` aplica un mapa fijo de `orderBy` con desempates
 `name`/`id` (o `createdAt`/`name`/`id` para novedades), sin ordenar en el cliente.
+El detalle público vive en `/products/[slug]`: `product-detail.ts` valida el slug,
+consulta por su clave única con un `select` explícito y entrega un view-model plano
+con categoría y variantes. La talla y el color se resuelven desde query params GET
+contra esas variantes; solo una pareja exacta expone su precio y stock, y la UI no
+importa Prisma ni mantiene estado cliente.
 
 ## Decisions
 

@@ -61,7 +61,10 @@ describe("CatalogGrid", () => {
       "src",
       products[0].imageUrl,
     );
-    expect(screen.queryAllByRole("link")).toHaveLength(0);
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: "Ver Camiseta básica" }),
+    ).toHaveAttribute("href", "/products/camiseta-basica");
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 

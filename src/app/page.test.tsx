@@ -63,6 +63,9 @@ describe("Home", () => {
     expect(screen.getByLabelText("Ordenar por")).toHaveValue("name");
     expect(screen.getByRole("article")).toBeInTheDocument();
     expect(screen.getByText("Camiseta básica")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Ver Camiseta básica" }),
+    ).toHaveAttribute("href", "/products/camiseta-basica");
     expect(getCatalogProducts).toHaveBeenCalledWith(
       {
         categorySlug: null,

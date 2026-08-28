@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente feature lista: `product-detail`
+- Siguiente paso: iniciar el módulo 5 por una feature de IA según la decisión curricular
 - Bloqueador actual: ninguno
-- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `catalog-sort` en verde, 2026-08-28
+- Última verificación: validación independiente de `product-detail` aceptada y gate exacto en verde, 2026-08-28
 
 ## Registro de sesión
 
@@ -151,3 +151,23 @@
 - Estado: feature `catalog-sort` en `accepted`.
 - Riesgo o cuestión no resuelta: ninguno conocido para este slice; permanecen los warnings conocidos de pnpm/Prisma sin impacto en el gate.
 - Siguiente mejor paso: ejecutar `feature-validator` sobre `catalog-sort`; después continuar con `product-detail`.
+
+### Sesión 008 — `product-detail`
+
+- Fecha: 2026-08-28
+- Objetivo: añadir la ficha pública de producto y resolver talla/color contra una variante exacta con precio y stock URL-backed.
+- Completado:
+  - Creado servicio `product-detail.ts` server-only con slug canónico, `findUnique`, select explícito y parser escalar de talla/color sin aproximaciones.
+  - Creada `/products/[slug]` con 404 seguro, ficha responsive 4:5/una-dos columnas y formulario GET sin estado cliente.
+  - Precio base sin pareja; precio/stock exactos con pareja válida; selección parcial o inexistente explicada; agotada visible y deshabilitada sin acción de compra.
+  - Cada tarjeta del catálogo enlaza una sola vez a su detalle; filtros y ordenación existentes permanecen intactos.
+- Verificación ejecutada y evidencia:
+  - Tests focalizados → exit 0 (11 archivos, 48 tests): parser/consulta, 404, ruta, UI, stock, disabled y enlaces, además de regresiones existentes.
+  - `./init.sh` con Node v22.23.2/pnpm 10.18.3 → exit 0 (install, DB, lint, typecheck, 48 tests y build con `/products/[slug]`).
+  - Smoke SSR local → 200 para base, disponible S/Negro (19,90 €, 12), precio alternativo XL/Azul (20,90 €, 5), agotada M/Negro (0/disabled), parcial e inexistente; 404 para slug desconocido y no canónico.
+  - Revisión estática: GET/labels/legends/foco/targets >=44px/status accesible y responsive; sin carrito, checkout, try-on, IA, auth, schema, seed, dependencias o mutaciones.
+- Archivos o artefactos actualizados: ruta/tests bajo `src/app/products/[slug]/`, servicio/tests `src/lib/server/product-detail*`, ficha/tests/CSS bajo `src/components/product/`, formatter compartido, enlaces/tests del catálogo, `ARCHITECTURE.md`, `feature_list.json`, `PROGRESS.md` y spec planificada.
+- Validación independiente: `feature-validator` → `accept`; repitió 48 tests, gate completo y smoke SSR 200/404, y confirmó lookup seguro, precio/stock exactos, agotadas disabled, accesibilidad y alcance sin hallazgos bloqueantes.
+- Estado: feature `product-detail` en `accepted`.
+- Riesgo o cuestión no resuelta: no existe harness E2E persistente; el flujo observable se cubrió con tests server/página/componente y smoke SSR/HTTP. Los warnings conocidos de pnpm/Prisma no afectan al gate.
+- Siguiente mejor paso: cerrar esta fase con verificación acumulada y decidir qué feature de IA abre el módulo 5.
