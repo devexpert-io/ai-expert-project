@@ -143,14 +143,21 @@
     "title": "Detalle de producto con selector de variante",
     "user_visible_behavior": "El usuario ve la ficha del producto (imagen, descripción, precio) y selecciona talla/color viendo el stock disponible.",
     "depends_on": ["catalog-list"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "La página de detalle muestra imagen, descripción, precio y las variantes disponibles.",
       "Al elegir talla y color se muestra la variante correcta y su stock.",
       "Una variante agotada se muestra como tal y no puede comprarse."
     ],
-    "evidence": [],
-    "notes": "Estados de variante Disponible/Agotada en docs/domain-model.md. Aquí se ancla la prueba virtual (features tryon)."
+    "evidence": [
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call \"pnpm test -- src/lib/server/product-detail.test.ts 'src/app/products/[slug]/page.test.tsx' src/components/product/ProductDetail.test.tsx src/components/catalog/CatalogGrid.test.tsx src/app/page.test.tsx\" -> exit 0 (11 archivos, 48 tests; incluye parser/consulta/404/ficha/enlaces y regresiones existentes).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh' -> exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 48 tests y build con ruta dinámica /products/[slug]).",
+      "Smoke SSR local: ficha base, S/Negro (19,90 €, Disponible, 12), XL/Azul (20,90 €, Disponible, 5), M/Negro (Agotada, 0 y controles disabled), parcial e inexistente -> HTTP 200; slug desconocido/no canónico -> HTTP 404.",
+      "Revisión estática: slug canónico + findUnique/select server-only, formulario GET, valores escalares validados, pareja exacta sin aproximación, precio en céntimos, role=status/aria-live, targets >=44px y layout 1/2 columnas; sin schema, seed, dependencias, carrito, checkout, try-on, IA, auth, pedidos ni mutaciones.",
+      "git diff --check -> exit 0; Prisma schema, migraciones, seed, package.json y lockfile sin cambios.",
+      "Validación independiente feature-validator -> accept: 48 tests, gate completo y smoke SSR 200/404; confirmó lookup/select cerrado, precio/stock exactos, agotadas disabled, enlaces del catálogo y alcance sin hallazgos bloqueantes."
+    ],
+    "notes": "Aceptada tras validación independiente. Ficha pública URL-backed con variantes exactas Disponible/Agotada y enlace desde catálogo; aquí se ancla la prueba virtual posterior."
   },
   {
     "id": "chatbot-conversation",
