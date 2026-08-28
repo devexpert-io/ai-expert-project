@@ -1,10 +1,32 @@
+import CatalogFilters from "../components/catalog/CatalogFilters";
 import CatalogGrid from "../components/catalog/CatalogGrid";
-import { getCatalogProducts } from "../lib/server/catalog";
+import {
+  getCatalogFilterOptions,
+  getCatalogProducts,
+} from "../lib/server/catalog";
+import {
+  hasActiveCatalogFilters,
+  parseCatalogFilters,
+} from "../lib/server/catalog-filters";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const products = await getCatalogProducts();
+type HomeProps = Readonly<{
+  searchParams?: Promise<
+    Record<string, string | string[] | undefined>
+  >;
+}>;
+
+export default async function Home({ searchParams }: HomeProps) {
+  const [options, resolvedSearchParams] = await Promise.all([
+    getCatalogFilterOptions(),
+    searchParams ?? Promise.resolve({}),
+  ]);
+  const filters = parseCatalogFilters(resolvedSearchParams, options);
+  const products = filters.priceRangeInvalid
+    ? []
+    : await getCatalogProducts(filters);
+  const hasActiveFilters = hasActiveCatalogFilters(filters);
 
   return (
     <main className="catalog-page">
@@ -15,7 +37,21 @@ export default async function Home() {
           Descubre prendas pensadas para acompañarte todos los días.
         </p>
       </header>
-      <CatalogGrid products={products} />
+      <CatalogFilters
+        filters={filters}
+        options={options}
+        resultCount={products.length}
+      />
+      <CatalogGrid
+        emptyMessage={
+          filters.priceRangeInvalid
+            ? "Corrige el rango de precio para ver el catálogo."
+            : hasActiveFilters
+              ? "No encontramos productos con estos filtros."
+              : undefined
+        }
+        products={products}
+      />
     </main>
   );
 }

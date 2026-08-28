@@ -15,13 +15,17 @@ export function formatCatalogPrice(priceCents: number): string {
 
 type CatalogGridProps = Readonly<{
   products: readonly CatalogProduct[];
+  emptyMessage?: string;
 }>;
 
-export default function CatalogGrid({ products }: CatalogGridProps) {
+export default function CatalogGrid({
+  products,
+  emptyMessage = "No hay productos disponibles ahora mismo.",
+}: CatalogGridProps) {
   if (products.length === 0) {
     return (
       <p className={styles.empty} role="status">
-        No hay productos disponibles ahora mismo.
+        {emptyMessage}
       </p>
     );
   }

@@ -35,6 +35,9 @@ El catálogo público mantiene el acceso a datos en servidor: `src/lib/server/pr
 expone un singleton `PrismaClient` protegido por `server-only`, y
 `src/lib/server/catalog.ts` selecciona únicamente los campos de tarjeta y
 devuelve un view-model plano antes de que `src/app/page.tsx` lo pase a la UI.
+Los filtros del catálogo viven en query params GET; `catalog-filters.ts` los
+normaliza contra las opciones actuales y convierte precios a céntimos antes de
+que `catalog.ts` construya el `where` Prisma con condiciones AND.
 
 ## Decisions
 

@@ -96,14 +96,23 @@
     "title": "Filtrado del catálogo",
     "user_visible_behavior": "El usuario filtra el listado por categoría, talla, color y rango de precio.",
     "depends_on": ["catalog-list"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Seleccionar una categoría reduce el listado solo a productos de esa categoría.",
       "Filtrar por talla, color y precio reduce correctamente la lista.",
       "Los filtros son combinables y muestran estado vacío coherente si no hay resultados."
     ],
-    "evidence": [],
-    "notes": "Chips/píldoras de filtro según DESIGN.md. No cambia datos (ver docs/domain-model.md, escenario 'catálogo filtrado/ordenado')."
+    "evidence": [
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/server/catalog-filters.test.ts src/lib/server/catalog.test.ts src/components/catalog/CatalogFilters.test.tsx src/app/page.test.tsx src/components/catalog/CatalogGrid.test.tsx -> exit 0 (7 archivos, 29 tests; incluye tests AI existentes).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint && pnpm typecheck -> exit 0.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh' -> exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 29 tests y build).",
+      "Smoke SSR local: / -> HTTP 200 y 6 productos; ?category=camisetas -> 2; ?category=camisetas&size=M&color=Negro&minPrice=19.90&maxPrice=19.90 -> 1; combinación sin coincidencias -> 0; valores inválidos -> catálogo completo sin error.",
+      "Revisión estática: parser server-only con opciones actuales, valores escalares/case/espacios validados, precios exactos en céntimos y rango invertido sin consulta; Prisma combina categoría, misma variante talla+color y basePriceCents inclusivo con orden nombre+id estable.",
+      "Formulario GET nativo con select/fieldsets/legend, chips radio, inputs EUR, foco visible, targets >=44px, resumen accesible y limpiar filtros; sin sorting, detalle, enlaces de producto, carrito, IA, schema/seed ni dependencias nuevas.",
+      "git diff --check -> exit 0; no se añadieron .env, bases SQLite ni assets locales.",
+      "Validación independiente feature-validator -> accept: 18 tests focalizados, gate con 29 tests, matriz SSR de filtros/precios/params inválidos y revisión de accesibilidad/seguridad/scope sin findings."
+    ],
+    "notes": "Aceptada tras validación independiente. Filtros URL-backed server-side según DESIGN.md; la ordenación se mantiene estable y queda para `catalog-sort`."
   },
   {
     "id": "catalog-sort",
