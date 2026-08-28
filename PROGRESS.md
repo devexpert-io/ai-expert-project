@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente feature lista: `catalog-filter`
+- Siguiente feature lista: `catalog-sort`
 - Bloqueador actual: ninguno
-- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `catalog-list` en verde, 2026-08-28
+- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `catalog-filter` en verde, 2026-08-28
 
 ## Registro de sesión
 
@@ -109,3 +109,24 @@
 - Estado: feature `catalog-list` en `accepted`.
 - Riesgo o cuestión no resuelta: ninguno conocido para este slice; permanecen los warnings conocidos de pnpm/Prisma sin impacto en el gate.
 - Siguiente mejor paso: ejecutar `feature-validator` sobre `catalog-list`; después continuar con `catalog-filter`.
+
+### Sesión 006 — `catalog-filter`
+
+- Fecha: 2026-08-28
+- Objetivo: añadir filtros combinables por categoría, talla, color y rango de precio con estado persistido en la URL y consulta segura server-side.
+- Completado:
+  - Creado `catalog-filters.ts` con tipos de opciones/estado, validación contra categorías/variantes actuales, normalización de espacios/case y parser decimal exacto a céntimos sin coma flotante; duplicados, desconocidos, negativos, más de dos decimales y valores fuera de rango se ignoran.
+  - Extendido `catalog.ts` para cargar opciones actuales y construir un único `where` Prisma con AND: categoría, una misma variante para talla+color y límites inclusivos sobre `basePriceCents`; se conserva el orden nombre+id y no se filtra por stock.
+  - Añadido formulario Server Component GET con select, fieldsets/legend de radios estilo chip, precios, foco visible, targets táctiles >=44px, resumen accesible y enlace de limpieza; la página conserva la selección al recargar/compartir y distingue rango invertido y cero coincidencias.
+  - Manteniendo `CatalogGrid` sin acciones de tarjeta; no se tocaron schema/seed/dependencias ni se adelantaron sorting, detalle, carrito o IA.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/server/catalog-filters.test.ts src/lib/server/catalog.test.ts src/components/catalog/CatalogFilters.test.tsx src/app/page.test.tsx src/components/catalog/CatalogGrid.test.tsx` → exit 0 (7 archivos, 29 tests).
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint && pnpm typecheck` → exit 0.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh'` → exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 29 tests y build).
+  - Smoke SSR: `/` → HTTP 200/6 productos; `?category=camisetas` → 2; combinación `camisetas+M+Negro+19.90–19.90` → 1; combinación sin coincidencias → 0; valores inválidos → catálogo completo sin error.
+  - `git diff --check` → exit 0; revisión estática confirmó frontera server-only, validación de URL, query parametrizada, ausencia de stock/filtros de disponibilidad y alcance cerrado.
+- Archivos o artefactos actualizados: `src/app/page.tsx`, `src/lib/server/catalog-filters.ts`, `src/lib/server/catalog.ts`, `src/components/catalog/CatalogFilters.tsx`, `src/components/catalog/catalog.module.css`, `src/components/catalog/CatalogGrid.tsx`, tests de parser/consulta/formulario/página, `ARCHITECTURE.md`, `feature_list.json`, `PROGRESS.md`.
+- Validación independiente: `feature-validator` → `accept`; repitió 18 tests focalizados, gate con 29 tests y matriz SSR, confirmando precios exactos, misma variante talla+color, params seguros, accesibilidad y alcance sin findings.
+- Estado: feature `catalog-filter` en `accepted`.
+- Riesgo o cuestión no resuelta: ninguno conocido para este slice; permanecen los warnings conocidos de pnpm/Prisma sin impacto en el gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `catalog-filter`; después continuar con `catalog-sort`.
