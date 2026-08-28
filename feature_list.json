@@ -52,14 +52,21 @@
     "title": "Configuración del proveedor de IA por entorno",
     "user_visible_behavior": "El proveedor/modelo de IA se configura por variables de entorno y sin clave la app degrada con un mensaje claro.",
     "depends_on": ["bootstrap-stack"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "La ruta de proveedor/modelo es configurable por env (no cableada).",
       "Existen .env y .env.example con DEVEXPERT_API_KEY.",
       "Sin clave, las funciones de IA devuelven un mensaje de degradación controlado (sin romper)."
     ],
-    "evidence": [],
-    "notes": "DevExpert Inference (https://inference.devexpert.io/v1), clave DEVEXPERT_API_KEY, cliente OpenAI-compatible. Manejo de límite semanal (429) en technical-discovery.md."
+    "evidence": [
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm add openai@^7.8.0 server-only@^0.0.1 -> dependencias y lockfile actualizados (openai 7.8.0, server-only 0.0.1).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/server/ai -> exit 0 (12 tests: defaults/overrides, clave ausente, cliente lazy, no-retry, 401/403/429/5xx/red/configuración y no-fuga).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint && pnpm typecheck -> exit 0.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh' -> exit 0 con Node v22.23.2/pnpm 10.18.3 (install + db:setup + db:verify + lint + typecheck + 12 tests + build), sin clave ni red externa.",
+      "Revisión estática: config/provider importan `server-only`, no hay `NEXT_PUBLIC_DEVEXPERT_API_KEY`, llamadas desde `src/app` ni secretos en `.env.example`/Git.",
+      "Validación independiente feature-validator -> accept: 12 tests, gate completo, boundary server-only, cliente lazy sin retries, errores seguros y revisión de secretos/scope sin findings."
+    ],
+    "notes": "Aceptada tras validación independiente. Configuración server-only de DevExpert Inference y adapter OpenAI-compatible listos para consumidores futuros; sin chatbot, try-on, rutas o UI."
   },
   {
     "id": "catalog-list",

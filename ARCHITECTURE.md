@@ -13,7 +13,7 @@ Monolito simple sobre **Next.js (App Router)** en TypeScript. Una única app sir
 ## Layers
 
 1. **UI / páginas** — `src/app/*`: rutas, layouts y componentes React. Home mínima de arranque en `src/app/page.tsx`.
-2. **Lógica de dominio / servicios** — se añadirá en features posteriores (`bootstrap-seed` en adelante).
+2. **Lógica de dominio / servicios** — se añadirá en features posteriores (`bootstrap-seed` en adelante). El adapter de IA vive en `src/lib/server/ai/` y está marcado `server-only`.
 3. **Persistencia** — Prisma (`prisma/schema.prisma`) sobre SQLite. El esquema
    contiene las diez tablas del dominio y sus relaciones; la migración inicial
    vive en `prisma/migrations/` y el fixture de catálogo en `prisma/seed.ts`.
@@ -23,6 +23,11 @@ Monolito simple sobre **Next.js (App Router)** en TypeScript. Una única app sir
 ## Dependency Direction
 
 `src/app` → (futuro) dominio/servicios → Prisma (`@prisma/client`) → SQLite.
+
+Los consumidores futuros de IA en rutas, server actions o servicios de servidor
+usarán `src/lib/server/ai/provider.ts` → OpenAI SDK → DevExpert Inference. Los
+módulos de `src/lib/server/ai/` no se importan desde componentes cliente y la
+clave se lee solo en runtime de servidor.
 
 No hay dependencia inversa ni servicios externos obligatorios para arrancar.
 
@@ -36,6 +41,12 @@ No hay dependencia inversa ni servicios externos obligatorios para arrancar.
 - **Preparación automática**: `predev` y `prestart` llaman a `pnpm db:setup`;
   `.env` se copia desde `.env.example` solo cuando falta. `pnpm db:verify`
   comprueba la estructura y los mínimos del fixture sin escribir en la base.
+- **Proveedor de IA**: `src/lib/server/ai/config.ts` normaliza y valida
+  `DEVEXPERT_BASE_URL` y los modelos (`chat`, `chat-pro`, `image-edit`,
+  `embedding` por defecto) sin devolver la clave. `provider.ts` construye el
+  cliente OpenAI solo al ejecutar una operación con clave válida, fija
+  `maxRetries: 0` y devuelve degradaciones tipadas para errores de configuración,
+  autenticación, cupo, red y proveedor; no hace llamadas durante el build.
 - **Testing**: Vitest + Testing Library + jsdom. El gate de verificación es lint + typecheck + test + build, ejecutable desde `./init.sh`.
 - **Lint**: ESLint 9 (flat config) con `eslint-config-next`.
 
