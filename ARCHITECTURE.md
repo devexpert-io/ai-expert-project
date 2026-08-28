@@ -38,6 +38,9 @@ devuelve un view-model plano antes de que `src/app/page.tsx` lo pase a la UI.
 Los filtros del catálogo viven en query params GET; `catalog-filters.ts` los
 normaliza contra las opciones actuales y convierte precios a céntimos antes de
 que `catalog.ts` construya el `where` Prisma con condiciones AND.
+La ordenación sigue la misma frontera: `catalog-sort.ts` reduce `sort` a una
+unión cerrada y `catalog.ts` aplica un mapa fijo de `orderBy` con desempates
+`name`/`id` (o `createdAt`/`name`/`id` para novedades), sin ordenar en el cliente.
 
 ## Decisions
 

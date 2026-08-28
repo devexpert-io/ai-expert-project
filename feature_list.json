@@ -120,13 +120,22 @@
     "title": "Ordenación del catálogo",
     "user_visible_behavior": "El usuario ordena el listado por precio, novedad o nombre.",
     "depends_on": ["catalog-list"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Ordenar por precio (asc/desc), novedad y nombre cambia el orden del listado.",
       "La ordenación se combina con los filtros existentes."
     ],
-    "evidence": [],
-    "notes": "Orden temporal sobre el listado; no cambia datos persistidos."
+    "evidence": [
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/server/catalog-sort.test.ts src/lib/server/catalog.test.ts src/app/page.test.tsx src/components/catalog/CatalogFilters.test.tsx -> exit 0 (8 archivos, 34 tests; incluye filtros, grid y AI existentes).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint && pnpm typecheck -> exit 0.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh' -> exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 34 tests y build).",
+      "Smoke SSR local: / -> HTTP 200 y nombre A-Z; ?sort=price-asc / ?sort=price-desc -> precios ascendente/descendente; ?sort=newest -> novedades; filtros+sort conserva el subconjunto y el orden; ?sort=unknown vuelve a nombre A-Z.",
+      "Revisión estática: parser cerrado a name/price-asc/price-desc/newest, valor escalar único y default seguro; Prisma usa orderBy fijo con desempates name+id o createdAt+name+id, conserva where de filtros y no ordena en cliente.",
+      "Selector accesible Ordenar por en el formulario GET, con selección URL-backed, opciones textuales, foco/targets heredados y sin nombre descendente; sin schema, seed, dependencias, detalle, carrito o IA.",
+      "git diff --check -> exit 0; no se añadieron .env, bases SQLite ni assets locales.",
+      "Validación independiente feature-validator -> accept: 15 tests focalizados, gate con 34 tests y SSR de las cuatro opciones/filtros/fallback; mapa orderBy cerrado y alcance revisados sin findings."
+    ],
+    "notes": "Aceptada tras validación independiente. Ordenación URL-backed server-side con desempates deterministas; filtros existentes se conservan."
   },
   {
     "id": "product-detail",

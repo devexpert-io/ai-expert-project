@@ -57,9 +57,23 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Catálogo",
     );
-    expect(screen.getByRole("heading", { name: "Filtrar catálogo" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Filtrar catálogo" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Ordenar por")).toHaveValue("name");
     expect(screen.getByRole("article")).toBeInTheDocument();
     expect(screen.getByText("Camiseta básica")).toBeInTheDocument();
+    expect(getCatalogProducts).toHaveBeenCalledWith(
+      {
+        categorySlug: null,
+        size: null,
+        color: null,
+        minPriceCents: null,
+        maxPriceCents: null,
+        priceRangeInvalid: false,
+      },
+      "name",
+    );
   });
 
   it("reads the URL filters and keeps the selected controls", async () => {
@@ -80,24 +94,29 @@ describe("Home", () => {
           color: "Negro",
           minPrice: "19.90",
           maxPrice: "59.90",
+          sort: "price-desc",
         }),
       }),
     );
 
-    expect(screen.getByRole("combobox")).toHaveValue("camisetas");
+    expect(screen.getByLabelText("Categoría")).toHaveValue("camisetas");
+    expect(screen.getByLabelText("Ordenar por")).toHaveValue("price-desc");
     expect(screen.getByRole("radio", { name: "M" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Negro" })).toBeChecked();
     expect(screen.getByRole("spinbutton", { name: "Mínimo" })).toHaveValue(19.9);
     expect(screen.getByRole("spinbutton", { name: "Máximo" })).toHaveValue(59.9);
     expect(screen.getByText(/No encontramos productos/)).toBeInTheDocument();
-    expect(getCatalogProducts).toHaveBeenCalledWith({
-      categorySlug: "camisetas",
-      size: "M",
-      color: "Negro",
-      minPriceCents: 1990,
-      maxPriceCents: 5990,
-      priceRangeInvalid: false,
-    });
+    expect(getCatalogProducts).toHaveBeenCalledWith(
+      {
+        categorySlug: "camisetas",
+        size: "M",
+        color: "Negro",
+        minPriceCents: 1990,
+        maxPriceCents: 5990,
+        priceRangeInvalid: false,
+      },
+      "price-desc",
+    );
   });
 
   it("shows an inverted-range validation state without querying results", async () => {

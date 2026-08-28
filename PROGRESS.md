@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente feature lista: `catalog-sort`
+- Siguiente feature lista: `product-detail`
 - Bloqueador actual: ninguno
-- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `catalog-filter` en verde, 2026-08-28
+- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `catalog-sort` en verde, 2026-08-28
 
 ## Registro de sesión
 
@@ -130,3 +130,24 @@
 - Estado: feature `catalog-filter` en `accepted`.
 - Riesgo o cuestión no resuelta: ninguno conocido para este slice; permanecen los warnings conocidos de pnpm/Prisma sin impacto en el gate.
 - Siguiente mejor paso: ejecutar `feature-validator` sobre `catalog-filter`; después continuar con `catalog-sort`.
+
+### Sesión 007 — `catalog-sort`
+
+- Fecha: 2026-08-28
+- Objetivo: añadir ordenación pública por nombre, precio ascendente/descendente y novedades, manteniendo filtros y estado en la URL.
+- Completado:
+  - Creado `catalog-sort.ts` con unión cerrada de valores (`name`, `price-asc`, `price-desc`, `newest`) y parser que rechaza vacíos, desconocidos y duplicados con fallback seguro a nombre.
+  - Extendido `getCatalogProducts()` con un mapa cerrado de `orderBy` Prisma: nombre+id, precio+nombre+id y createdAt+nombre+id; se conserva el `where` de filtros y el rango inválido no consulta.
+  - Añadido selector GET accesible «Ordenar por» al formulario existente; conserva categoría/talla/color/precio, permite recarga/compartir/historial sin JavaScript y mantiene la UI responsive/foco/targets.
+  - No se cambiaron schema/seed/dependencias ni se adelantaron detalle, carrito o IA.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/server/catalog-sort.test.ts src/lib/server/catalog.test.ts src/app/page.test.tsx src/components/catalog/CatalogFilters.test.tsx` → exit 0 (8 archivos, 34 tests).
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint && pnpm typecheck` → exit 0.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh'` → exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 34 tests y build).
+  - Smoke SSR: `/` → nombre A-Z; `?sort=price-asc` y `?sort=price-desc` → precios asc/desc; `?sort=newest` → novedades; filtros+sort conserva subconjunto y orden; `?sort=unknown` → nombre A-Z; todas respondieron HTTP 200.
+  - `git diff --check` → exit 0; revisión estática confirmó parser cerrado, orderBy parametrizado fijo, desempates deterministas y ausencia de sorting en cliente/alcance adelantado.
+- Archivos o artefactos actualizados: `src/lib/server/catalog-sort.ts`, `src/lib/server/catalog-sort.test.ts`, `src/lib/server/catalog.ts`, `src/lib/server/catalog.test.ts`, `src/app/page.tsx`, `src/app/page.test.tsx`, `src/components/catalog/CatalogFilters.tsx`, `src/components/catalog/CatalogFilters.test.tsx`, `src/components/catalog/catalog.module.css`, `ARCHITECTURE.md`, `feature_list.json`, `PROGRESS.md`.
+- Validación independiente: `feature-validator` → `accept`; repitió 15 tests focalizados, gate con 34 tests y SSR de las cuatro opciones/filtros/fallback, confirmando orderBy cerrado, accesibilidad y alcance sin findings.
+- Estado: feature `catalog-sort` en `accepted`.
+- Riesgo o cuestión no resuelta: ninguno conocido para este slice; permanecen los warnings conocidos de pnpm/Prisma sin impacto en el gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `catalog-sort`; después continuar con `product-detail`.

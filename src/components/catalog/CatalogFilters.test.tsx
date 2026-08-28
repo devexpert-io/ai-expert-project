@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 
 import type {
   CatalogFilterOptions,
@@ -31,7 +33,12 @@ const filters: CatalogFilterState = {
 describe("CatalogFilters", () => {
   it("renders a native GET form with selected accessible controls", () => {
     render(
-      <CatalogFilters filters={filters} options={options} resultCount={2} />,
+      <CatalogFilters
+        filters={filters}
+        options={options}
+        resultCount={2}
+        sort="price-desc"
+      />,
     );
 
     const form = screen.getByRole("button", { name: "Aplicar filtros" })
@@ -40,6 +47,7 @@ describe("CatalogFilters", () => {
     expect(form).toHaveAttribute("action", "/");
     expect(form).toHaveAttribute("method", "get");
     expect(screen.getByLabelText("Categoría")).toHaveValue("camisetas");
+    expect(screen.getByLabelText("Ordenar por")).toHaveValue("price-desc");
     expect(screen.getByRole("radio", { name: "M" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Negro" })).toBeChecked();
     expect(screen.getByRole("spinbutton", { name: "Mínimo" })).toHaveValue(

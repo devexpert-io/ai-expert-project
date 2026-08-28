@@ -275,11 +275,11 @@
   }
 
   .filterFieldset {
-    grid-column: span 3;
+    grid-column: span 2;
   }
 
   .filterFieldset:last-child {
-    grid-column: span 3;
+    grid-column: span 2;
   }
 }
 

@@ -4,6 +4,10 @@ import type {
   CatalogFilterOptions,
   CatalogFilterState,
 } from "../../lib/server/catalog-filters";
+import {
+  CATALOG_SORT_OPTIONS,
+  type CatalogSort,
+} from "../../lib/server/catalog-sort";
 
 import styles from "./catalog.module.css";
 
@@ -16,6 +20,7 @@ type CatalogFiltersProps = Readonly<{
   options: CatalogFilterOptions;
   filters: CatalogFilterState;
   resultCount: number;
+  sort?: CatalogSort;
 }>;
 
 function formatPriceInput(priceCents: number | null): string {
@@ -34,6 +39,7 @@ export default function CatalogFilters({
   options,
   filters,
   resultCount,
+  sort = "name",
 }: CatalogFiltersProps) {
   const minimumPrice = formatPriceHelp(options.minPriceCents);
   const maximumPrice = formatPriceHelp(options.maxPriceCents);
@@ -72,6 +78,22 @@ export default function CatalogFilters({
               {options.categories.map((category) => (
                 <option key={category.slug} value={category.slug}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={`${styles.filterControl} ${styles.sortControl}`}>
+            <label htmlFor="catalog-sort">Ordenar por</label>
+            <select
+              className={styles.select}
+              defaultValue={sort}
+              id="catalog-sort"
+              name="sort"
+            >
+              {CATALOG_SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>

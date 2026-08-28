@@ -8,6 +8,7 @@ import {
   hasActiveCatalogFilters,
   parseCatalogFilters,
 } from "../lib/server/catalog-filters";
+import { parseCatalogSort } from "../lib/server/catalog-sort";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +24,10 @@ export default async function Home({ searchParams }: HomeProps) {
     searchParams ?? Promise.resolve({}),
   ]);
   const filters = parseCatalogFilters(resolvedSearchParams, options);
+  const sort = parseCatalogSort(resolvedSearchParams);
   const products = filters.priceRangeInvalid
     ? []
-    : await getCatalogProducts(filters);
+    : await getCatalogProducts(filters, sort);
   const hasActiveFilters = hasActiveCatalogFilters(filters);
 
   return (
@@ -41,6 +43,7 @@ export default async function Home({ searchParams }: HomeProps) {
         filters={filters}
         options={options}
         resultCount={products.length}
+        sort={sort}
       />
       <CatalogGrid
         emptyMessage={

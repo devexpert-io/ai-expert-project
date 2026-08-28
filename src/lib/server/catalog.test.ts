@@ -84,14 +84,17 @@ describe("getCatalogProducts", () => {
   it("combines validated category, same-variant, and inclusive price filters", async () => {
     findMany.mockResolvedValue([]);
 
-    await getCatalogProducts({
-      categorySlug: "camisetas",
-      size: "M",
-      color: "Negro",
-      minPriceCents: 1990,
-      maxPriceCents: 5990,
-      priceRangeInvalid: false,
-    });
+    await getCatalogProducts(
+      {
+        categorySlug: "camisetas",
+        size: "M",
+        color: "Negro",
+        minPriceCents: 1990,
+        maxPriceCents: 5990,
+        priceRangeInvalid: false,
+      },
+      "price-desc",
+    );
 
     expect(findMany).toHaveBeenCalledWith({
       where: {
@@ -99,7 +102,11 @@ describe("getCatalogProducts", () => {
         variants: { some: { size: "M", color: "Negro" } },
         basePriceCents: { gte: 1990, lte: 5990 },
       },
-      orderBy: [{ name: "asc" }, { id: "asc" }],
+      orderBy: [
+        { basePriceCents: "desc" },
+        { name: "asc" },
+        { id: "asc" },
+      ],
       select: {
         id: true,
         slug: true,
@@ -128,6 +135,28 @@ describe("getCatalogProducts", () => {
     ).resolves.toEqual([]);
 
     expect(findMany).not.toHaveBeenCalled();
+  });
+
+  it("uses deterministic tie-breakers for ascending price and newest", async () => {
+    findMany.mockResolvedValue([]);
+
+    await getCatalogProducts(undefined, "price-asc");
+    expect(findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        orderBy: [
+          { basePriceCents: "asc" },
+          { name: "asc" },
+          { id: "asc" },
+        ],
+      }),
+    );
+
+    await getCatalogProducts(undefined, "newest");
+    expect(findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        orderBy: [{ createdAt: "desc" }, { name: "asc" }, { id: "asc" }],
+      }),
+    );
   });
 });
 
