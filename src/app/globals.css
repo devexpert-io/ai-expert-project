@@ -1,0 +1,70 @@
+:root {
+  --color-primary: #111827;
+  --color-secondary: #4b5563;
+  --color-background: #ffffff;
+  --color-surface: #f3f4f6;
+  --color-border: #e5e7eb;
+  --page-gutter: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-background);
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-primary);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.catalog-page {
+  min-height: 100vh;
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 48px var(--page-gutter) 72px;
+}
+
+.catalog-header {
+  margin-bottom: 24px;
+}
+
+.catalog-eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.catalog-title {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.catalog-intro {
+  max-width: 42rem;
+  margin: 12px 0 0;
+  color: var(--color-secondary);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --page-gutter: 32px;
+  }
+}

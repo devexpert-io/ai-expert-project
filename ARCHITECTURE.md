@@ -31,6 +31,11 @@ clave se lee solo en runtime de servidor.
 
 No hay dependencia inversa ni servicios externos obligatorios para arrancar.
 
+El catálogo público mantiene el acceso a datos en servidor: `src/lib/server/prisma.ts`
+expone un singleton `PrismaClient` protegido por `server-only`, y
+`src/lib/server/catalog.ts` selecciona únicamente los campos de tarjeta y
+devuelve un view-model plano antes de que `src/app/page.tsx` lo pase a la UI.
+
 ## Decisions
 
 - **ORM**: Prisma (v6) con SQLite, decisión tomada en `bootstrap-stack`. `DATABASE_URL="file:./dev.db"`. Alternativa evaluada: Drizzle; descartada por familiaridad y tooling de migraciones integrado de Prisma.

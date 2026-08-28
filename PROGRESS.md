@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente feature lista: `catalog-list`
+- Siguiente feature lista: `catalog-filter`
 - Bloqueador actual: ninguno
-- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `ai-provider-config` en verde, 2026-08-28
+- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `catalog-list` en verde, 2026-08-28
 
 ## Registro de sesión
 
@@ -87,3 +87,25 @@
 - Estado: `ai-provider-config` en `accepted`.
 - Riesgo o cuestión no resuelta: ninguna para esta feature; pnpm muestra el warning ya existente de `onlyBuiltDependencies` en `package.json` y Prisma la deprecación de `package.json#prisma`, sin impacto en el gate.
 - Siguiente mejor paso: ejecutar `feature-validator` sobre `ai-provider-config`; después continuar con `catalog-list`.
+
+### Sesión 005 — `catalog-list`
+
+- Fecha: 2026-08-28
+- Objetivo: sustituir la home técnica por el listado público del catálogo, leyendo los seis productos sembrados desde Prisma en servidor y mostrando una cuadrícula responsive de tarjetas.
+- Completado:
+  - Creado el singleton Prisma server-only y `getCatalogProducts()` con consulta mínima de producto/categoría, orden estable nombre+id y view-model plano sin variantes ni stock.
+  - Convertida `/` en Server Component dinámico con `main`, `h1` «Catálogo», estado vacío accesible y `CatalogGrid` semántico (`ul`/`li`/`article`) con imagen, alt, nombre, categoría y precio EUR.
+  - Añadidos estilos globales y de tarjetas según `DESIGN.md`: grid 12 columnas, 1/2/3/4 columnas en 12/640/900/1200px, gap 24px, imagen 4:5, tokens de color y tipografía system/Inter.
+  - Permitido el host HTTPS `placehold.co` para `next/image`; no se cambiaron schema/seed ni se añadieron dependencias.
+  - Añadidos tests de consulta, página, semántica, precios y estado vacío.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/app/page.test.tsx src/components/catalog src/lib/server/catalog.test.ts` → exit 0 (5 archivos, 16 tests).
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint && pnpm typecheck` → exit 0.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh'` → exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 16 tests y build).
+  - `pnpm dev` → `/` respondió HTTP 200 en servidor local; SSR incluyó «Catálogo», «Productos del catálogo» y los productos sembrados; proceso detenido tras la comprobación.
+  - `git diff --check` → exit 0; revisión estática confirmó server-only, payload mínimo y ausencia de filtros, sort, links, botones, variantes, stock, IA y dependencias nuevas.
+- Archivos o artefactos actualizados: `src/app/page.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, `src/components/catalog/CatalogGrid.tsx`, `src/components/catalog/catalog.module.css`, `src/lib/server/prisma.ts`, `src/lib/server/catalog.ts`, tests de página/grid/consulta, `next.config.ts`, `ARCHITECTURE.md`, `feature_list.json`, `PROGRESS.md`, `vitest.setup.ts`.
+- Validación independiente: `feature-validator` → `accept`; repitió tests/gate/HTTP 200, confirmó 6 artículos, consulta mínima server-only, semántica accesible, grid 12/6/4/3 y ausencia de alcance adelantado.
+- Estado: feature `catalog-list` en `accepted`.
+- Riesgo o cuestión no resuelta: ninguno conocido para este slice; permanecen los warnings conocidos de pnpm/Prisma sin impacto en el gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `catalog-list`; después continuar con `catalog-filter`.
