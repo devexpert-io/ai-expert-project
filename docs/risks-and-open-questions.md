@@ -12,7 +12,9 @@
 - ¿El carrito debe persistir en servidor para usuarios y solo en localStorage para invitados?
 - ¿Dónde se guardan/almacenan las imágenes generadas del try-on (disco local vs URL temporal)?
 - ¿El chatbot guarda historial por sesión o por usuario?
-- ¿Cuántas variantes/tallas/colores por producto requiere el seed?
+- ¿Cuántas variantes/tallas/colores por producto requiere el seed? **Resuelto
+  (`bootstrap-seed`)**: fixture local de 4 categorías, 6 productos y 24
+  variantes, con tallas S/M/L/XL, varios colores y estados disponible/agotada.
 
 ## Later / Not MVP
 

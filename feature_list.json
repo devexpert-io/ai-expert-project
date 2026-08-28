@@ -30,14 +30,21 @@
     "title": "Modelo de datos y seed del catálogo",
     "user_visible_behavior": "Al iniciar la app se cargan categorías, productos y variantes (talla/color/stock/precio) de ejemplo en SQLite.",
     "depends_on": ["bootstrap-stack"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Las migraciones crean las tablas User, Product, Variant, Category, Cart/CartItem, Order, OrderLine, Chat, TryonImage.",
       "El seed carga datos suficientes para demostrar catálogo, filtros y una compra.",
       "Un test o script verifica que el catálogo quedó poblado tras el arranque."
     ],
-    "evidence": [],
-    "notes": "Ver docs/domain-model.md (entidades y relaciones) y docs/technical-discovery.md (tablas). Seed data de ejemplo, sin datos reales de producto."
+    "evidence": [
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh' -> exit 0 (Node v22.23.2, pnpm 10.18.3; install + db:setup + db:verify + lint + typecheck + test + build).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec prisma validate -> exit 0; pnpm exec prisma format --check -> exit 0.",
+      "SQLite limpio aislado: db:setup + db:verify -> exit 0 con 10 tablas, 4 categorías, 6 productos y 24 variantes (23 disponibles, 1 agotada); segundo ciclo conserva los conteos y SKU.",
+      "Prueba no destructiva: se insertó una fila de usuario, carrito, pedido/línea, chat y try-on entre ciclos; db:setup + db:verify conservaron las 6 filas y sus datos.",
+      "`.env` existente conservado byte a byte; `git status --short` no incluye `.env` ni bases SQLite.",
+      "Validación independiente feature-validator -> accept: repitió schema/migración/seed, idempotencia, preservación de sentinels, caso negativo de stock, HTTP 200 y ./init.sh con Node 22.23.2/pnpm 10.18.3; sin findings de seguridad o documentación."
+    ],
+    "notes": "Aceptada tras validación independiente. Migración Prisma SQLite, seed idempotente/no destructivo y preparación automática listos para las features de catálogo."
   },
   {
     "id": "ai-provider-config",

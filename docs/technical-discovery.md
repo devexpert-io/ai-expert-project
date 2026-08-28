@@ -9,7 +9,11 @@ Web app responsive (móvil + escritorio). El foco es el navegador; sin apps nati
 - **Frontend/Backend**: Next.js (React) con API routes / server actions. Monolito simple.
 - **Lenguaje**: TypeScript.
 - **Persistencia**: SQLite vía **Prisma** (decisión tomada; ver `ARCHITECTURE.md`). Cero configuración externa; se ajusta al requisito de lanzar en local con un comando. `DATABASE_URL="file:./dev.db"`.
-- **Seed data**: carga de catálogo/modelo al iniciar.
+- **Seed data**: migración y carga idempotente de catálogo al iniciar. La
+  migración inicial crea `User`, `Product`, `Variant`, `Category`, `Cart`,
+  `CartItem`, `Order`, `OrderLine`, `Chat` y `TryonImage`; `prisma/seed.ts`
+  aporta 4 categorías, 6 productos y 24 variantes de ejemplo, sin usuarios ni
+  pedidos demo.
 
 ## Data and Storage
 
@@ -49,7 +53,10 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 ## Deployment and Operations
 
-- Local: un solo comando (p. ej. `pnpm dev` o `pnpm start` + seed automático). Se prefiere `pnpm`.
+- Local: un solo comando (`pnpm dev` o `pnpm start` + `pnpm db:setup`
+  automático). El setup copia `.env.example` solo si falta `.env`, genera el
+  cliente, aplica migraciones pendientes y ejecuta el seed sin borrar filas.
+  Se prefiere `pnpm`.
 - Sin despliegue en la nube en el MVP (no obstante, el stack local es portable).
 - Variables de entorno en `.env` (claves de IA), con `.env.example`.
 
@@ -57,7 +64,8 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 - Tests unitarios del dominio (catálogo, carrito, checkout, estados de pedido).
 - Smoke test del flujo de compra y de las funciones de IA con clave real o mock.
-- CI ligero (lint + typecheck + tests).
+- Gate local reproducible: `pnpm db:setup`, `pnpm db:verify`, lint +
+  typecheck + tests + build desde `./init.sh`.
 
 ## Observability
 
