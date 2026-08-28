@@ -1,9 +1,12 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
+
 import type {
   CatalogFilterOptions,
   CatalogFilterState,
 } from "./catalog-filters";
+import type { CatalogSort } from "./catalog-sort";
 import { prisma } from "./prisma";
 
 export type CatalogProduct = Readonly<{
@@ -17,6 +20,7 @@ export type CatalogProduct = Readonly<{
 
 export async function getCatalogProducts(
   filters?: CatalogFilterState,
+  sort: CatalogSort = "name",
 ): Promise<CatalogProduct[]> {
   if (filters?.priceRangeInvalid) {
     return [];
@@ -53,7 +57,7 @@ export async function getCatalogProducts(
     : undefined;
 
   const products = await prisma.product.findMany({
-    orderBy: [{ name: "asc" }, { id: "asc" }],
+    orderBy: getCatalogOrderBy(sort),
     ...(where && Object.keys(where).length > 0 ? { where } : {}),
     select: {
       id: true,
@@ -73,6 +77,31 @@ export async function getCatalogProducts(
     ...product,
     categoryName: category.name,
   }));
+}
+
+function getCatalogOrderBy(
+  sort: CatalogSort,
+): Prisma.ProductOrderByWithRelationInput[] {
+  switch (sort) {
+    case "price-asc":
+      return [
+        { basePriceCents: "asc" },
+        { name: "asc" },
+        { id: "asc" },
+      ];
+    case "price-desc":
+      return [
+        { basePriceCents: "desc" },
+        { name: "asc" },
+        { id: "asc" },
+      ];
+    case "newest":
+      return [{ createdAt: "desc" }, { name: "asc" }, { id: "asc" }];
+    case "name":
+      return [{ name: "asc" }, { id: "asc" }];
+    default:
+      return [{ name: "asc" }, { id: "asc" }];
+  }
 }
 
 function sortUniqueValues(values: readonly string[]): string[] {
