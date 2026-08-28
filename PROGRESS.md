@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente feature lista: `ai-provider-config`
+- Siguiente feature lista: `catalog-list`
 - Bloqueador actual: ninguno
-- Última verificación: `feature-validator` independiente en `accept` y gate exacto con Node v22.23.2/pnpm 10.18.3 en verde, 2026-08-28
+- Última verificación: `feature-validator` independiente en `accept` y gate exacto de `ai-provider-config` en verde, 2026-08-28
 
 ## Registro de sesión
 
@@ -66,3 +66,24 @@
 - Estado: `bootstrap-seed` en `accepted`.
 - Riesgo o cuestión no resuelta: ninguna para esta feature; `@prisma/client` muestra el warning conocido de build scripts ignorados/deprecación de configuración Prisma durante `pnpm install`, pero `prisma generate` y el gate completo pasan.
 - Siguiente mejor paso: ejecutar `feature-validator` sobre `bootstrap-seed`; después continuar con `ai-provider-config`.
+
+### Sesión 004 — `ai-provider-config`
+
+- Fecha: 2026-08-28
+- Objetivo: crear la frontera server-only de DevExpert Inference con configuración por entorno y degradación segura para consumers futuros.
+- Completado:
+  - Añadidas las variables de endpoint/modelos a `.env.example`, manteniendo `DEVEXPERT_API_KEY` vacía y `.env` ignorado.
+  - Añadidas `openai` 7.8.0 y `server-only` 0.0.1 con lockfile actualizado.
+  - Creado `src/lib/server/ai/config.ts` con defaults, trim, validación HTTP(S), estado sin clave y objeto público sin secretos.
+  - Creado `src/lib/server/ai/provider.ts` con cliente lazy, `maxRetries: 0`, `AiResult`, clasificación 401/403/429/5xx/red/configuración y mensajes constantes sin errores crudos.
+  - Tests fake sin red en `config.test.ts` y `provider.test.ts`; no se añadieron consumers, rutas, UI, chatbot ni try-on.
+  - Documentación durable actualizada en `ARCHITECTURE.md`, `CONSTRAINTS.md` y `docs/technical-discovery.md`.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/server/ai` → exit 0 (12 tests; Vitest también confirmó el smoke test existente).
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint` y `pnpm typecheck` → exit 0.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh'` → exit 0 (Node v22.23.2/pnpm 10.18.3; install, setup/verify de DB, lint, typecheck, tests y build).
+  - No hubo llamadas de red de DevExpert; pruebas usan fake OpenAI. Revisión `rg` confirma server-only y ausencia de `NEXT_PUBLIC_DEVEXPERT_API_KEY`.
+- Validación independiente: `feature-validator` → `accept`; 12 tests y gate completo repetidos, boundary server-only, no-retry, clasificación segura y revisión de secretos/scope sin findings.
+- Estado: `ai-provider-config` en `accepted`.
+- Riesgo o cuestión no resuelta: ninguna para esta feature; pnpm muestra el warning ya existente de `onlyBuiltDependencies` en `package.json` y Prisma la deprecación de `package.json#prisma`, sin impacto en el gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `ai-provider-config`; después continuar con `catalog-list`.

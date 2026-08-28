@@ -13,10 +13,13 @@ Reglas durables que las features futuras deben respetar.
 - **Aplicar cambios de esquema mediante migraciones Prisma** (`prisma migrate deploy` desde `pnpm db:setup`); no usar `db push` como ruta de arranque. Razón: conservar una historia reproducible y revisable.
 - **Guardar dinero como enteros en céntimos**, nunca como `Float`. Razón: evitar errores de redondeo en catálogo, carrito y pedidos.
 - **Mantener el seed idempotente y no destructivo**: solo actualiza el fixture de categorías, productos y variantes por sus claves estables; no borrar ni modificar usuarios, carritos, pedidos, chats o imágenes. Razón: permitir repetir el arranque sin perder trabajo local.
+- **Mantener el proveedor de IA server-only**: leer `DEVEXPERT_API_KEY`, base URL y modelos únicamente desde módulos bajo `src/lib/server/ai/`; no importar esos módulos desde componentes cliente. Razón: impedir que secretos o configuración privada lleguen al bundle del navegador.
+- **Degradar el proveedor de IA de forma tipada y sin reintentos automáticos**: mapear errores de configuración, autenticación, cupo, red y proveedor a códigos/mensajes constantes y seguros. Razón: las features posteriores deben poder funcionar sin clave o servicio disponible.
 
 ## MUST NOT
 
 - **No commitear claves/secrets** (p. ej. `DEVEXPERT_API_KEY`) ni el archivo `.env`. Las claves van en `.env` (ignorado) y se documentan en `.env.example` (commiteado). Razón: seguridad y formación AI Expert (clave personal).
+- **No exponer `DEVEXPERT_API_KEY` ni cuerpos/headers de errores en `NEXT_PUBLIC_*`, logs o respuestas públicas**. Razón: preservar credenciales y datos de prompts/respuestas frente al navegador.
 - **No crear cuentas demo ni datos reales en el seed**; los usuarios, carritos, pedidos, chats e imágenes se crean en sus features y flujos propios. Razón: evitar que credenciales o pedidos de ejemplo aparezcan en producción.
 - **No truncar la base ni ejecutar `prisma migrate reset` durante el arranque**. Razón: preservar datos locales y permitir que el setup sea seguro de repetir.
 - **No añadir despliegue cloud ni CI remoto** en el MVP; solo scripts locales. Razón: non-goal del slice.

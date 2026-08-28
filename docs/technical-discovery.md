@@ -27,8 +27,11 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 - **URL base**: `https://inference.devexpert.io/v1`.
 - **Clave**: variable de entorno `DEVEXPERT_API_KEY` (no commitear; usar `.env` y `.env.example`). Sin clave, las funciones de IA degradan con un mensaje claro.
+- **Configuración**: `DEVEXPERT_BASE_URL` (por defecto `https://inference.devexpert.io/v1`), `DEVEXPERT_CHAT_MODEL` (`chat`), `DEVEXPERT_CHAT_PRO_MODEL` (`chat-pro`), `DEVEXPERT_IMAGE_MODEL` (`image-edit`) y `DEVEXPERT_EMBEDDING_MODEL` (`embedding`). Los valores se recortan y la base URL debe ser absoluta HTTP(S).
 - **Compatibilidad**: al ser OpenAI-compatible, funciona con el cliente oficial `openai` (SDK TypeScript/Python) solo cambiando `apiKey` y `baseURL`.
 - **Límites**: cada clave tiene un uso semanal que se repone solo; al llegar al 100% las peticiones se rechazan hasta el reseteo. La app debe manejar el error 429/uso y mostrarlo con claridad.
+- **Frontera**: `src/lib/server/ai/config.ts` y `provider.ts` son módulos `server-only`; el cliente se crea de forma lazy, no se llama durante construcción y usa `maxRetries: 0`. El adapter no devuelve la clave ni errores crudos.
+- **Degradación**: `missing_api_key`, `invalid_configuration`, `invalid_api_key`, `quota_exhausted`, `provider_unavailable` y `provider_error`, con mensajes constantes aptos para usuario. No se reintenta automáticamente.
 
 ### Chatbot IA
 - Endpoint `POST /chat/completions` (OpenAI-compatible).
