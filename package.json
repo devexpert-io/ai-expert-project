@@ -2,13 +2,26 @@
   "name": "tienda-ropa",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22.11.0 <23",
+    "pnpm": "10.18.3"
+  },
   "scripts": {
     "dev": "next dev",
+    "predev": "pnpm db:setup",
     "build": "next build",
     "start": "next start",
+    "prestart": "pnpm db:setup",
+    "db:setup": "node scripts/db-setup.mjs",
+    "db:seed": "prisma db seed",
+    "db:verify": "node scripts/verify-seed.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
@@ -29,6 +42,7 @@
     "eslint-config-next": "^15.1.0",
     "jsdom": "^26.0.0",
     "prisma": "^6.0.0",
+    "tsx": "^4.23.12",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },

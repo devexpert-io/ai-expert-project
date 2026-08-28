@@ -6,3 +6,163 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  name            String?
+  phone           String?
+  shippingAddress String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  cart        Cart?
+  orders      Order[]
+  chats       Chat[]
+  tryonImages TryonImage[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  description    String
+  imageUrl       String
+  basePriceCents Int
+  categoryId     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category    Category     @relation(fields: [categoryId], references: [id])
+  variants    Variant[]
+  tryonImages TryonImage[]
+
+  @@index([categoryId])
+}
+
+model Variant {
+  id         String   @id @default(cuid())
+  sku        String   @unique
+  productId  String
+  size       String
+  color      String
+  stock      Int
+  priceCents Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product     Product      @relation(fields: [productId], references: [id])
+  cartItems   CartItem[]
+  orderLines  OrderLine[]
+  tryonImages TryonImage[]
+
+  @@unique([productId, size, color])
+  @@index([productId])
+  @@index([size])
+  @@index([color])
+}
+
+model Cart {
+  id         String   @id @default(cuid())
+  guestToken String?  @unique
+  userId     String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant Variant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@unique([cartId, variantId])
+  @@index([variantId])
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  userId     String
+  status     String   @default("PENDING_PAYMENT")
+  totalCents Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id])
+  lines OrderLine[]
+
+  @@index([userId])
+}
+
+model OrderLine {
+  id             String   @id @default(cuid())
+  orderId        String
+  variantId      String
+  productName    String
+  size           String
+  color          String
+  quantity       Int
+  unitPriceCents Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant Variant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model Chat {
+  id           String   @id @default(cuid())
+  sessionKey   String   @unique
+  userId       String?
+  messagesJson String   @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model TryonImage {
+  id             String   @id @default(cuid())
+  userId         String?
+  productId      String?
+  variantId      String?
+  inputImageUrl  String?
+  resultImageUrl String?
+  status         String   @default("REQUESTED")
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([productId])
+  @@index([variantId])
+}

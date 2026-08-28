@@ -2,13 +2,13 @@
 
 ## Estado verificado actual
 
-- Raíz del repositorio: `/Users/juan/Documents/EDICION-5/harness/ai-expert-project`
+- Raíz del repositorio: `/Users/antonio/Projects/devexpert-io/ai-expert-project`
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente feature lista: `bootstrap-seed`
+- Siguiente feature lista: `ai-provider-config`
 - Bloqueador actual: ninguno
-- Última verificación: `./init.sh` en verde (exit 0), 2026-08-26
+- Última verificación: `feature-validator` independiente en `accept` y gate exacto con Node v22.23.2/pnpm 10.18.3 en verde, 2026-08-28
 
 ## Registro de sesión
 
@@ -46,3 +46,23 @@
 - Riesgo o cuestión no resuelta: `@prisma/client` aún sin `prisma generate` (sin modelos; se generará el cliente en `bootstrap-seed` cuando existan modelos). Build scripts de `@prisma/client` ignorados por pnpm a propósito (no necesarios aún).
 - Estado: feature `bootstrap-stack` en `accepted` (validación independiente vía `feature-validator`: veredicto `accept`).
 - Siguiente mejor paso: validación independiente de `bootstrap-stack`; después, feature `bootstrap-seed` (modelo de datos + seed del catálogo).
+
+### Sesión 003 — `bootstrap-seed`
+
+- Fecha: 2026-08-28
+- Objetivo: definir el modelo Prisma/SQLite, migración, fixture idempotente y preparación verificable del catálogo local.
+- Completado:
+  - Diez modelos de dominio con relaciones, unicidades, índices y precios en céntimos en `prisma/schema.prisma`.
+  - Migración reproducible `prisma/migrations/20260828100000_bootstrap_seed/` y fixture de 4 categorías, 6 productos y 24 variantes en `prisma/seed.ts`.
+  - `scripts/db-setup.mjs` (fallback no destructivo de `.env`, generate, migrate deploy y seed) y `scripts/verify-seed.mjs` (comprobación de solo lectura); scripts/hooks integrados en `package.json` e `init.sh`.
+  - Documentación durable actualizada en `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/technical-discovery.md` y `docs/risks-and-open-questions.md`.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH npx --yes --package=pnpm@10.18.3 --call './init.sh'` → exit 0 (Node v22.23.2, pnpm 10.18.3; install, db:setup, db:verify, lint, typecheck, test y build).
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec prisma validate` y `pnpm exec prisma format --check` → exit 0.
+  - Dos ciclos sobre SQLite limpio aislado → conteos estables (4/6/24; 23 disponibles, 1 agotada), SKU sin duplicados y verificación en verde.
+  - Con filas ajenas de usuario/carrito/pedido/línea/chat/try-on insertadas entre ciclos, el segundo setup conservó conteos y contenido; `.env` existente también se conservó byte a byte.
+  - `git diff --check` → exit 0; `.env`, `*.db` y diarios permanecen ignorados y no rastreados.
+- Validación independiente: `feature-validator` → `accept`; repitió migración/seed, sentinels, restricciones relacionales, degradación negativa de stock, arranque HTTP 200, seguridad acotada y gate completo sin findings.
+- Estado: `bootstrap-seed` en `accepted`.
+- Riesgo o cuestión no resuelta: ninguna para esta feature; `@prisma/client` muestra el warning conocido de build scripts ignorados/deprecación de configuración Prisma durante `pnpm install`, pero `prisma generate` y el gate completo pasan.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `bootstrap-seed`; después continuar con `ai-provider-config`.

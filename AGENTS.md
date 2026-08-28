@@ -26,10 +26,13 @@ Antes de escribir código:
 
 ## Stack y verificación estándar
 
-- Stack: Next.js (App Router) + TypeScript + SQLite (Prisma) + pnpm.
+- Stack: Next.js (App Router) + TypeScript + SQLite (Prisma 6) + Node 22 + pnpm 10.18.3.
+- Runtime reproducible: activar la versión exacta de `.nvmrc`; `packageManager` fija pnpm.
 - Arranque local: `pnpm dev`.
 - Gate de verificación (ejecutado por `./init.sh`, no bloqueante y sin dev servers):
+  - comprobación del runtime Node 22 + pnpm 10.18.3,
   - `pnpm install` (usa `--frozen-lockfile` si existe `pnpm-lock.yaml`),
+  - `pnpm db:setup` y `pnpm db:verify`,
   - `pnpm lint`,
   - `pnpm typecheck`,
   - `pnpm test`,
