@@ -1,0 +1,27 @@
+.widget { position: fixed; right: 16px; bottom: 16px; z-index: 30; }
+.widget button, .widget textarea { font: inherit; }
+.widget button { min-height: 44px; cursor: pointer; border: 1px solid var(--color-border); border-radius: 6px; }
+.widget button:focus-visible, .widget textarea:focus-visible, .log:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+.trigger { background: var(--color-primary); color: white; padding: 10px 20px; float: right; }
+.panel { position: absolute; right: 0; bottom: 60px; width: min(390px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 100px)); display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-background); box-shadow: 0 8px 32px #1d1b1820; overflow: hidden; }
+.header { display: flex; align-items: flex-start; gap: 12px; padding: 18px 16px 12px; }
+.eyebrow { font-size: .65rem; letter-spacing: .1em; color: var(--color-secondary); }
+.header h2 { font-family: var(--font-editorial); font-size: 1.4rem; font-weight: 400; line-height: 1.15; margin: 6px 0 0; }
+.header button { flex-shrink: 0; width: 44px; background: transparent; font-size: 1.5rem; }
+.notice { font-size: .72rem; color: var(--color-secondary); margin: 0; padding: 0 16px 12px; }
+.log { min-height: 40px; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 12px 16px; border-block: 1px solid var(--color-border); overflow-wrap: anywhere; }
+.empty { color: var(--color-secondary); font-size: .9rem; }
+.user, .assistant { border-radius: 6px; padding: 10px 12px; margin: 0 0 12px; font-size: .875rem; }
+.user { background: var(--color-surface); margin-left: 20px; }
+.assistant { border: 1px solid var(--color-border); margin-right: 12px; }
+.log strong { font-size: .7rem; color: var(--color-secondary); }
+.log p { margin: 4px 0 0; white-space: pre-wrap; }
+.feedback { padding: 0 16px; font-size: .8rem; }
+.feedback p { margin: 8px 0 0; }
+.error { color: #8b2c22; }
+.form { display: grid; gap: 8px; padding: 12px 16px 16px; }
+.form label { font-size: .8rem; }
+.form textarea { width: 100%; min-height: 60px; max-height: 100px; resize: vertical; border: 1px solid var(--color-border); border-radius: 6px; padding: 10px; background: #fffdf8; color: var(--color-primary); }
+.form button { background: var(--color-accent); color: white; padding: 8px 16px; }
+.form button:disabled { opacity: .6; cursor: default; }
+@media (max-height: 500px) { .header { padding: 8px 12px; } .header h2 { font-size: 1rem; } .notice { display: none; } .form { padding: 8px 12px; gap: 4px; } .form textarea { min-height: 44px; height: 44px; } }

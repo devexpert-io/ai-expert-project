@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { ChatWidget } from "../components/chat/ChatWidget";
 
 export const metadata: Metadata = {
   title: "Estudio — esenciales cotidianos",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </nav>
         </header>
         {children}
+        <ChatWidget />
       </body>
     </html>
   );

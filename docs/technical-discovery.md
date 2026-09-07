@@ -91,3 +91,27 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
   - Chat: https://portal.devexpert.io/docs/chat
   - Imagen: https://portal.devexpert.io/docs/images
   - Embeddings: https://portal.devexpert.io/docs/embeddings
+
+## Contrato implementado de conversación (`chatbot-conversation`)
+
+- `POST /api/chat`: JSON `{ message, history }`, historial alterno user/assistant
+  en pares completos. Mensaje 1–2000 caracteres; hasta 10 mensajes de historial de
+  1–4000 caracteres cada uno; cuerpo limitado durante lectura a 64 KiB reales.
+  Campos extra y roles privilegiados se rechazan. Origin explícito ajeno se rechaza.
+- Éxito 200 `{ ok: true, reply }`; errores 400/413 de entrada, 429 de cupo y 503
+  de configuración/red/DB/proveedor con `{ ok: false, message }` constante seguro.
+  Todas estas respuestas llevan `Cache-Control: no-store`.
+- Catálogo fresco por envío, inyección JSON directa de los 6 productos/24 variantes,
+  precios en céntimos de EUR y stock incluso cero. Chat usa `DEVEXPERT_CHAT_MODEL`,
+  `stream: false`, máximo 800 tokens y timeout de 30 segundos; cero reintentos.
+- Widget público global, no modal, en catálogo y detalle. Historial en memoria;
+  cierra/reabre y navega sin perderlo, recarga lo reinicia. Errores conservan borrador
+  para reenvío manual y no entran en el contexto. No se escribe en la tabla `Chat`.
+- Prueba local: activar Node de `.nvmrc`, `CI=true ./init.sh`, `pnpm dev`; abrir
+  `http://localhost:3000`, pulsar «Abrir chat», preguntar por tallas/precios y luego
+  «¿Y en azul?». Con `DEVEXPERT_API_KEY` válida en `.env` se usa el gateway real.
+  Sin clave: `DEVEXPERT_API_KEY='' pnpm dev` muestra degradación segura al enviar.
+  Se debe reiniciar el servidor tras cambiar variables. El gate no usa red de IA.
+- Verificación offline: tests Vitest de endpoint, servicio, consulta y widget con
+  fakes; smoke real local mediante mock HTTP compatible con OpenAI. Esto verifica
+  integración/contexto, pero no demuestra calidad semántica del modelo real.
