@@ -92,7 +92,17 @@ describe("ProductDetail", () => {
       "action",
       "/products/camiseta-basica",
     );
-    expect(screen.queryByText(/carrito|probar con IA/iu)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Prueba virtual" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Elige una foto", { hidden: true }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/inference\.devexpert\.io/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Generar prueba virtual" }),
+    ).toBeDisabled();
+    expect(screen.queryByText(/carrito/iu)).not.toBeInTheDocument();
   });
 
   it("shows exact price and available stock for a selected variant", () => {

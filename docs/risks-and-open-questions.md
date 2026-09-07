@@ -10,7 +10,11 @@
 
 - ¿Qué estados tiene un `Pedido` completo (enviado/entregado/devuelto) o basta con `Pagado`/`Cancelado`?
 - ¿El carrito debe persistir en servidor para usuarios y solo en localStorage para invitados?
-- ¿Dónde se guardan/almacenan las imágenes generadas del try-on (disco local vs URL temporal)?
+- ¿Dónde se guardan/almacenan las imágenes *generadas* del try-on (disco local vs URL temporal)? Sigue abierto para `tryon-result`.
+- **Foto de entrada resuelta (`tryon-upload`)**: memoria del navegador, sin
+  disco ni fila `TryonImage`. Aviso visible (dato personal,
+  `inference.devexpert.io`, no se guarda en la tienda) y checkbox de
+  consentimiento. Recargar descarta la foto.
 - **Historial chatbot resuelto para `chatbot-conversation`**: memoria del widget global, sin persistencia; últimos cinco pares exitosos como contexto. Recargar reinicia. Historial por usuario queda fuera de este slice.
 - ¿Cuántas variantes/tallas/colores por producto requiere el seed? **Resuelto
   (`bootstrap-seed`)**: fixture local de 4 categorías, 6 productos y 24
@@ -35,7 +39,9 @@
 
 - **Try-on realista** (alto): resultado poco fiel o rechazo del endpoint de edición de imagen; mitigar con proveedor/modelo configurable y expectativas acotadas.
 - **Cupo semanal de IA**: uso limitado por clave y por semana; peticiones rechazadas al 100%. Mitigar con modos sin clave, mensajes claros y evitando abusos.
-- **Privacidad**: la foto del usuario viaja a `inference.devexpert.io`; mitigar con aviso y no persistirla innecesariamente.
+- **Privacidad**: la foto del usuario viajará a `inference.devexpert.io` en
+  `tryon-result`; mitigado en `tryon-upload` con aviso + consentimiento y sin
+  persistir la foto de entrada. El destino de la imagen generada sigue abierto.
 - **Alcance del MVP amplio** (7 features): riesgo de sobrecarga; priorizar el slice de compra y dejar IA como incremento.
 - **Dependencia de red** para IA: sin red, chatbot/try-on no funcionan; degradar con claridad.
 

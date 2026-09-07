@@ -20,6 +20,10 @@ Web app responsive (móvil + escritorio). El foco es el navegador; sin apps nati
 - SQLite local, inicializada con seed (productos, categorías, variantes, stock).
 - Tablas principales: `User`, `Product`, `Variant`, `Category`, `Cart`/`CartItem`, `Order`, `OrderLine`, `Chat`, `TryonImage`.
 - Los archivos de imagen del try-on se gestionan como referencia (URL) o upload temporal; decidir en implementación.
+- **Foto de entrada (`tryon-upload`)**: solo memoria del navegador
+  (`File` + `URL.createObjectURL`). No se escribe en disco, `public/`,
+  cookies, `localStorage` ni la fila `TryonImage`. El destino de la imagen
+  *generada* sigue abierto para `tryon-result`.
 
 ## Integrations
 
@@ -44,6 +48,8 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 - Alternativa: generación pura `POST /images/generations`, modelo `image`.
 - **La ruta de proveedor/modelo debe ser configurable** (por env), no cableada a un único endpoint.
 - La foto del usuario viaja al gateway: tratar como dato personal; avisar al usuario y no persistirla innecesariamente.
+- En `tryon-upload` la foto de entrada permanece en memoria del navegador; la
+  generación (`POST /images/edits`) queda para `tryon-result`.
 
 ### Pasarela de pago
 - Simulada internamente. Sin integración de terceros en el MVP.
