@@ -191,3 +191,23 @@
 - Estado: feature `chatbot-conversation` en `accepted`.
 - Riesgo o cuestión no resuelta: calidad semántica del modelo real no se midió con una clave real; el smoke usa mock local y la degradación sin clave queda cubierta por tests.
 - Siguiente mejor paso: ejecutar `feature-spec` para `chatbot-recommend`.
+
+### Sesión 010 — `chatbot-recommend`
+
+- Fecha: 2026-09-07
+- Objetivo: añadir recomendaciones estructuradas del chatbot con tarjetas navegables y datos reconstruidos desde el catálogo vigente.
+- Completado:
+  - Contrato compartido ampliado a `{ ok: true, reply, recommendations }`; el cliente conserva únicamente pares de texto en el historial.
+  - Contexto server-only ampliado con IDs, slug, imagen y `Variant.id`; el prompt exige JSON limitado con candidatos por IDs.
+  - Servicio server-only parsea la salida, limita el JSON, descarta IDs inventados, variantes ajenas, stock cero y productos sin ninguna variante disponible, deduplica y reconstruye precio/nombre/categoría/imagen/variante desde catálogo fresco.
+  - Widget accesible con hasta tres tarjetas, `Link` interno, query params canónicos para talla/color, disponibilidad, imagen/alt, foco y rechazo defensivo de payloads malformados.
+  - Actualizados `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/technical-discovery.md` y `docs/risks-and-open-questions.md`; no se tocaron Prisma, seed, dependencias ni autenticación.
+- Verificación ejecutada y evidencia:
+  - `PATH=/private/tmp/node-v22.23.2-darwin-arm64/bin:$PATH pnpm test -- src/lib/server/ai/chat.test.ts src/lib/server/chat-catalog.test.ts src/app/api/chat/route.test.ts src/components/chat/ChatWidget.test.tsx` → exit 0 (15 archivos, 90 tests), incluyendo persistencia de tarjetas tras seguimiento fallido y rechazo de `recommendations` no-array.
+  - `PATH=/private/tmp/node-v22.23.2-darwin-arm64/bin:$PATH pnpm lint` → exit 0; `pnpm typecheck` → exit 0.
+  - `PATH=/private/tmp/node-v22.23.2-darwin-arm64/bin:$PATH CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3; DB setup/verify, lint, typecheck, 90 tests y build en verde. Log: `/private/tmp/recommend-finish-gate.log`.
+  - El primer intento del gate fue bloqueado por `ENOTFOUND` al recrear dependencias; la repetición con acceso de red completó todas las comprobaciones. El servidor del usuario en 3000 no se detuvo ni se usó.
+- Estado: feature `chatbot-recommend` en `accepted` por decisión explícita del usuario; se omitió el rol validator.
+- Smoke del orquestador: build en 4340 y mock OpenAI en 4339; ID inventado y duplicado descartados, dos tarjetas válidas. CUA confirmó Camiseta básica L/Blanco (19,90 €, 8 unidades) y Abrigo ligero (89,90 €) al abrir sus enlaces; seguimiento informativo conserva tarjetas previas. UI revisada a 1280x900 y 390x844 con scroll y controles alcanzables; viewport restaurado.
+- Riesgo o cuestión no resuelta: no existe harness E2E persistente; pruebas offline y smoke con mock verifican integración, sin medir calidad semántica del proveedor real.
+- Siguiente mejor paso: continuar con `tryon-upload` mediante `feature-spec`.

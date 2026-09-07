@@ -16,6 +16,15 @@
 .assistant { border: 1px solid var(--color-border); margin-right: 12px; }
 .log strong { font-size: .7rem; color: var(--color-secondary); }
 .log p { margin: 4px 0 0; white-space: pre-wrap; }
+.recommendations { margin-top: 12px; }
+.recommendations h3 { font-size: .8rem; margin: 0 0 8px; }
+.recommendations ul { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.recommendation { display: flex; gap: 10px; align-items: center; min-height: 76px; padding: 6px; border: 1px solid var(--color-border); border-radius: 6px; color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+.recommendation:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.recommendation img { width: 52px; height: 64px; object-fit: cover; flex-shrink: 0; }
+.recommendation span { display: grid; gap: 2px; min-width: 0; }
+.recommendation strong, .recommendation b { font-size: .78rem; }
+.recommendation small { font-size: .7rem; color: var(--color-secondary); }
 .feedback { padding: 0 16px; font-size: .8rem; }
 .feedback p { margin: 8px 0 0; }
 .error { color: #8b2c22; }

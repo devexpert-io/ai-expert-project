@@ -38,6 +38,6 @@ export async function POST(request: Request) {
   try {
     const result = await answerChat(input);
     if (!result.ok) return json({ ok: false, message: result.message }, result.code === "quota_exhausted" ? 429 : 503);
-    return json({ ok: true, reply: result.value }, 200);
+    return json({ ok: true, reply: result.value.reply, recommendations: result.value.recommendations }, 200);
   } catch { return json({ ok: false, message: CHAT_UNAVAILABLE }, 503); }
 }

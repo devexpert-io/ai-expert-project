@@ -184,13 +184,20 @@
     "title": "Recomendación de productos del chatbot",
     "user_visible_behavior": "El chatbot recomienda productos/variantes válidos del catálogo ante peticiones del usuario.",
     "depends_on": ["chatbot-conversation"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Al pedir una recomendación, el chatbot devuelve productos/variantes existentes en el catálogo.",
       "Las recomendaciones enlazan a productos navegables del catálogo."
     ],
-    "evidence": [],
-    "notes": "Recomendación semántica opcional vía embeddings (POST /embeddings) o inyectando catálogo en el prompt (research task en risks-and-open-questions.md)."
+    "evidence": [
+      "PATH=/private/tmp/node-v22.23.2-darwin-arm64/bin:$PATH pnpm test -- src/lib/server/ai/chat.test.ts src/lib/server/chat-catalog.test.ts src/app/api/chat/route.test.ts src/components/chat/ChatWidget.test.tsx -> exit 0 (15 archivos, 90 tests; incluye suite acumulada y regresiones de persistencia de tarjetas/payload no-array).",
+      "PATH=/private/tmp/node-v22.23.2-darwin-arm64/bin:$PATH pnpm lint -> exit 0; pnpm typecheck -> exit 0; pnpm build -> exit 0.",
+      "PATH=/private/tmp/node-v22.23.2-darwin-arm64/bin:$PATH CI=true ./init.sh -> exit 0 con Node v22.23.2/pnpm 10.18.3 (db:setup/db:verify, lint, typecheck, 90 tests y build), ejecutado tras corregir persistencia de tarjetas por turno.",
+      "Fakes sin red verifican candidatos válidos, variante exacta/stock, pertenencia, stock cero, deduplicación, límite de tres, JSON malformado, catálogo vacío, degradaciones y reconstrucción de datos servidor-side.",
+      "Testing Library verifica tarjetas accesibles, enlace interno canónico con size/color codificados, escape de texto, persistencia tras seguimiento fallido y rechazo de payload cliente malformado (incluido recommendations no-array).",
+      "Smoke CUA del orquestador con build local 4340/mock OpenAI 4339: descarta ID inventado/duplicado, abre Camiseta básica L/Blanco (19,90 €, stock 8) y Abrigo ligero (89,90 €); seguimiento informativo conserva tarjetas. UI revisada a 1280x900 y 390x844. Sin llamadas a IA real."
+    ],
+    "notes": "Aceptada por decisión del usuario sin ejecutar el rol validator. El modelo solo propone productId/variantId en JSON limitado; el servidor reconstruye campos visibles y exige stock positivo. Embeddings/RAG no son necesarios para el catálogo actual; calidad semántica real sigue pendiente."
   },
   {
     "id": "tryon-upload",

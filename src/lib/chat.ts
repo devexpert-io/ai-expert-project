@@ -6,7 +6,24 @@ export const CHAT_UNAVAILABLE = "El chat no est√° disponible temporalmente. Int√
 export const CHAT_INVALID = "Revisa el mensaje y vuelve a intentarlo.";
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 export type ChatInput = { message: string; history: ChatMessage[] };
-export type ChatResponse = { ok: true; reply: string } | { ok: false; message: string };
+export type ChatRecommendation = Readonly<{
+  productId: string;
+  slug: string;
+  name: string;
+  imageUrl: string;
+  categoryName: string;
+  priceCents: number;
+  variant: Readonly<{
+    id: string;
+    size: string;
+    color: string;
+    priceCents: number;
+    stock: number;
+  }> | null;
+}>;
+export type ChatResponse =
+  | { ok: true; reply: string; recommendations: readonly ChatRecommendation[] }
+  | { ok: false; message: string };
 
 function object(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
