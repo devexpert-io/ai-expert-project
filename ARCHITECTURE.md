@@ -69,3 +69,17 @@ importa Prisma ni mantiene estado cliente.
 ## Constraints
 
 Ver `CONSTRAINTS.md` para reglas MUST/MUST NOT durables.
+
+## Conversación del catálogo
+
+`ChatWidget` se monta una vez desde el layout servidor. Conserva el historial en
+memoria durante navegación cliente; recargar reinicia la conversación. Solo los
+cinco pares exitosos más recientes se envían como contexto. La UI presenta texto
+React escapado y errores separados; no persiste filas `Chat` ni usa cookies.
+
+`POST /api/chat` (Node) valida transporte/contrato compartido en `src/lib/chat.ts`
+→ `src/lib/server/ai/chat.ts` → `aiProvider.run` → chat completions de DevExpert.
+Dentro de cada operación, `chat-catalog.ts` consulta exclusivamente campos públicos
+de producto, categoría y variantes actuales (precio de variante y stock exactos).
+El contexto JSON se separa del historial y de las instrucciones del servidor.
+No hay herramientas, RAG, recomendaciones estructuradas ni acceso a datos privados.

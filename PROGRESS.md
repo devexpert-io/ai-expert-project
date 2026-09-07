@@ -2,13 +2,13 @@
 
 ## Estado verificado actual
 
-- Raíz del repositorio: `/Users/antonio/Projects/devexpert-io/ai-expert-project`
+- Raíz del repositorio: `/Users/juan/Documents/EDICION-5/harness/ai-expert-project`
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: iniciar el módulo 5 por una feature de IA según la decisión curricular
+- Siguiente paso: planificar `chatbot-recommend` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: validación independiente de `product-detail` aceptada y gate exacto en verde, 2026-08-28
+- Última verificación: `chatbot-conversation` aceptada por validador independiente, 84 tests y smoke con mock local, 2026-09-07; gate completo previo en verde y repetición posterior bloqueada por el entorno (ver sesión 009)
 
 ## Registro de sesión
 
@@ -171,3 +171,23 @@
 - Estado: feature `product-detail` en `accepted`.
 - Riesgo o cuestión no resuelta: no existe harness E2E persistente; el flujo observable se cubrió con tests server/página/componente y smoke SSR/HTTP. Los warnings conocidos de pnpm/Prisma no afectan al gate.
 - Siguiente mejor paso: cerrar esta fase con verificación acumulada y decidir qué feature de IA abre el módulo 5.
+
+### Sesión 009 — `chatbot-conversation`
+
+- Fecha: 2026-09-07
+- Objetivo: añadir conversación pública del chatbot con contexto real del catálogo y degradación segura del proveedor IA.
+- Completado:
+  - Widget global accesible en catálogo y detalle, con historial en memoria, foco, Escape, estado de carga, errores reintentables y diseño responsive.
+  - `POST /api/chat` con contrato validado, límite efectivo de 64 KiB, control de Origin, respuestas no cacheadas y errores seguros.
+  - Contexto Prisma fresco de productos, categorías y variantes con precio exacto y stock; adapter de chat configurado con timeout 30 s y cero reintentos.
+  - Recomendaciones estructuradas, enlaces, try-on, pedidos y persistencia de chats quedan fuera de esta feature.
+- Verificación ejecutada y evidencia:
+  - `CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3, incluyendo install, db:setup, db:verify, lint, typecheck, 84 tests y build.
+  - Tests focalizados y revisión independiente `feature-validator` → `accept` (15 archivos, 84 tests), cubriendo endpoint, límites, seguridad, catálogo, proveedor, UI y accesibilidad.
+  - Smoke local con mock OpenAI → dos turnos HTTP 200; contexto de 6 productos/24 variantes y stock cero; comprobación UI a escritorio y 390x844, cierre por Escape, foco y continuidad al navegar al detalle.
+  - Repetición posterior del gate no fue posible: la reinstalación de dependencias encontró ENOTFOUND y la escalación fue rechazada por el límite de uso del entorno; no contradice el gate completado antes.
+- Archivos o artefactos actualizados: endpoint, servicio/contexto de chat, contrato compartido, widget/CSS/layout, tests focalizados, documentación durable, spec y estados de feature.
+- Validación independiente: `accept`; sin findings de seguridad, alcance o arquitectura.
+- Estado: feature `chatbot-conversation` en `accepted`.
+- Riesgo o cuestión no resuelta: calidad semántica del modelo real no se midió con una clave real; el smoke usa mock local y la degradación sin clave queda cubierta por tests.
+- Siguiente mejor paso: ejecutar `feature-spec` para `chatbot-recommend`.

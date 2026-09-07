@@ -165,14 +165,18 @@
     "title": "Chatbot de consultas del catálogo",
     "user_visible_behavior": "El usuario abre el chatbot, hace preguntas de la tienda/catálogo y recibe respuestas con contexto real del catálogo.",
     "depends_on": ["ai-provider-config", "bootstrap-seed"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "El widget de chat se abre y permite enviar mensajes.",
       "Las respuestas usan contexto del catálogo (datos coherentes).",
       "Sin clave o con cupo agotado muestra un mensaje claro en vez de romper."
     ],
-    "evidence": [],
-    "notes": "Modelo chat/chat-pro vía POST /chat/completions. Inyectar contexto del catálogo (o RAG) según technical-discovery.md. Widget flotante en DESIGN.md."
+    "evidence": [
+      "Validación focalizada independiente -> accept: 15 archivos, 84 tests; endpoint, límites de cuerpo, roles inválidos, Origin externo, errores de proveedor/DB, catálogo fresco con precio de variante y stock cero, historial, escape de HTML, reenvío y accesibilidad del widget.",
+      "Gate completo del implementador -> exit 0 con Node v22.23.2/pnpm 10.18.3 (install, db:setup, db:verify, lint, typecheck, 84 tests y build). La repetición posterior fue bloqueada por ENOTFOUND al reinstalar dependencias y límite de uso del entorno.",
+      "Smoke local con mock OpenAI -> HTTP 200 en dos turnos; contexto de 6 productos/24 variantes y stock cero; UI verificada en escritorio y 390x844, con foco, Escape, navegación al detalle y continuidad de historial."
+    ],
+    "notes": "Aceptada tras validación independiente. Widget global y POST /api/chat usan catálogo fresco, historial en memoria, errores seguros y degradación sin clave/cupo; recomendaciones estructuradas y enlaces quedan para chatbot-recommend."
   },
   {
     "id": "chatbot-recommend",

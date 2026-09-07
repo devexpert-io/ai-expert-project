@@ -11,7 +11,7 @@
 - ¿Qué estados tiene un `Pedido` completo (enviado/entregado/devuelto) o basta con `Pagado`/`Cancelado`?
 - ¿El carrito debe persistir en servidor para usuarios y solo en localStorage para invitados?
 - ¿Dónde se guardan/almacenan las imágenes generadas del try-on (disco local vs URL temporal)?
-- ¿El chatbot guarda historial por sesión o por usuario?
+- **Historial chatbot resuelto para `chatbot-conversation`**: memoria del widget global, sin persistencia; últimos cinco pares exitosos como contexto. Recargar reinicia. Historial por usuario queda fuera de este slice.
 - ¿Cuántas variantes/tallas/colores por producto requiere el seed? **Resuelto
   (`bootstrap-seed`)**: fixture local de 4 categorías, 6 productos y 24
   variantes, con tallas S/M/L/XL, varios colores y estados disponible/agotada.
@@ -42,5 +42,5 @@
 ## Research Tasks
 
 - Investigar cómo lograr el mejor resultado de **try-on** con el endpoint de edición (`image-edit`, multipart con foto + prompt de la prenda) de DevExpert Inference, y cómo acotar expectativas realistas.
-- Confirmar si conviene **RAG con embeddings** (`embedding`, `POST /embeddings`) para que el chatbot recomiende productos de forma semántica, o basta con inyectar contexto del catálogo en el prompt.
+- **Contexto de conversación resuelto para `chatbot-conversation`**: inyección directa del catálogo fresco (6 productos/24 variantes). Evaluar búsqueda semántica solo si crece el catálogo o lo requiere `chatbot-recommend`. Calidad semántica del proveedor real pendiente: pruebas realizadas con fakes/mock local, sin consumir clave real.
 - Decidir ORM y configuración SQLite para arrancar en local con `pnpm`. **Resuelto (bootstrap-stack)**: Prisma v6 + SQLite (`DATABASE_URL="file:./dev.db"`), datasource mínimo cableado; modelos/migraciones en `bootstrap-seed`.

@@ -23,3 +23,15 @@ Reglas durables que las features futuras deben respetar.
 - **No crear cuentas demo ni datos reales en el seed**; los usuarios, carritos, pedidos, chats e imágenes se crean en sus features y flujos propios. Razón: evitar que credenciales o pedidos de ejemplo aparezcan en producción.
 - **No truncar la base ni ejecutar `prisma migrate reset` durante el arranque**. Razón: preservar datos locales y permitir que el setup sea seguro de repetir.
 - **No añadir despliegue cloud ni CI remoto** en el MVP; solo scripts locales. Razón: non-goal del slice.
+
+## Conversaciones IA
+
+- **Acotar el contrato público del chat**: 64 KiB efectivos de cuerpo, pregunta
+  de 1–2000 caracteres, hasta 10 mensajes alternos de historial (pares completos),
+  cada contenido/respuesta de 1–4000 caracteres. Razón: limitar recursos y contexto
+  no fiable antes del proveedor; el cliente no puede elegir roles privilegiados,
+  modelos ni configuración.
+- **Usar únicamente contexto público de catálogo y renderizar texto escapado**.
+  No registrar conversaciones ni persistirlas sin una decisión explícita posterior.
+  Razón: evitar acceso a datos privados e interpretación de contenido generativo
+  como HTML; la conversación actual solo vive en memoria del navegador.
