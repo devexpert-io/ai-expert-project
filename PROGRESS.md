@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `tryon-result` con `feature-spec`
+- Siguiente paso: planificar `cart-add` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `tryon-upload` aceptada por decisión explícita del usuario (2026-09-07); se omitieron gate `./init.sh` y rol validator
+- Última verificación: `tryon-result` aceptada por decisión explícita del usuario (2026-09-07) tras prueba manual; se omitieron gate `./init.sh` y rol validator
 
 ## Registro de sesión
 
@@ -250,3 +250,32 @@
 - Estado: feature `tryon-upload` en `accepted`.
 - Riesgo o cuestión no resuelta: el gate completo no se reejecutó en esta sesión; la generación sigue en `tryon-result`.
 - Siguiente mejor paso: ejecutar `feature-spec` para `tryon-result`.
+
+### Sesión 014 — `tryon-result`
+
+- Fecha: 2026-09-07
+- Objetivo: conectar `TryOnUpload` a DevExpert Inference y mostrar el resultado o un error claro.
+- Completado:
+  - Contrato compartido en `src/lib/tryon.ts`: tope 6 MiB, data URL png/jpeg, parseo multipart, textos de procesando/aproximación. `TRYON_STATUS_READY` actualizado.
+  - Servicio `src/lib/server/ai/tryon.ts`: lookup de producto, prompt fijo en español, `images.edit` con `DEVEXPERT_IMAGE_MODEL`, timeout 60 s, `n: 1`, `b64_json`; URL-only → `provider_error` sin fetch.
+  - `POST /api/tryon` (Node, `maxDuration` 60, `no-store`): Origin, bytes reales, consentimiento, 400/413/429/503.
+  - Isla habilitada con props `productSlug`/`size`/`color` desde `ProductDetail` (sigue Server Component). Un fetch, abort al limpiar/desmontar, resultado `<img>` nativo efímero.
+  - Docs: `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/technical-discovery.md`, `docs/risks-and-open-questions.md`.
+- Verificación ejecutada y evidencia:
+  - Tests focalizados + suite: 132 tests, exit 0 (Node v22.12.0 / pnpm 10.18.3).
+  - `pnpm lint` y `pnpm typecheck` exit 0; `git diff --check` limpio.
+  - `CI=true ./init.sh` falló al recrear dependencias: EPERM `mkdir .../iconv-lite@0.6.3/.../iconv-lite_tmp_*/.idea` (el paquete publica `.idea/`). `node_modules` quedó incompleto. `pnpm build` y smoke `pnpm dev` no se ejecutaron.
+- Estado: `tryon-result` en `in_progress` (implementada, gate incompleto). No `passing` ni `accepted`.
+- Riesgo o cuestión no resuelta: hay que restaurar dependencias fuera de este sandbox (`CI=true pnpm install --frozen-lockfile`) y repetir `./init.sh`.
+- Siguiente mejor paso: install + gate fuera del sandbox; si exit 0, marcar `passing` y validar con `feature-validator`.
+
+### Sesión 015 — `tryon-result` accepted
+
+- Fecha: 2026-09-07
+- Objetivo: cerrar la feature por decisión del usuario tras prueba manual.
+- Completado:
+  - El usuario confirmó que envío, procesando, resultado y error controlado funcionan en la ficha.
+  - `tryon-result` pasa a `accepted` por petición explícita; se omiten `./init.sh` y el rol validator.
+- Estado: feature `tryon-result` en `accepted`.
+- Riesgo o cuestión no resuelta: el gate completo no se reejecutó en esta sesión; la calidad visual real del `image-edit` no se midió.
+- Siguiente mejor paso: ejecutar `feature-spec` para `cart-add`.

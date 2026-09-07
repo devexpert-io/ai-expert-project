@@ -3,6 +3,13 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 
 import {
+  TRYON_APPROXIMATION_NOTICE,
+  TRYON_RESULT_ALT,
+  TRYON_STATUS_GENERATING,
+  TRYON_UNAVAILABLE,
+  isTryonImageDataUrl,
+} from "../../lib/tryon";
+import {
   TRYON_ACCEPT,
   TRYON_CLEAR_LABEL,
   TRYON_CONSENT_LABEL,
@@ -18,14 +25,29 @@ import {
 
 import styles from "./tryon-upload.module.css";
 
-export function TryOnUpload() {
+type TryOnUploadProps = Readonly<{
+  productSlug: string;
+  size?: string | null;
+  color?: string | null;
+}>;
+
+export function TryOnUpload({
+  productSlug,
+  size = null,
+  color = null,
+}: TryOnUploadProps) {
   const fileInputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const fileRef = useRef<File | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasValidPhoto, setHasValidPhoto] = useState(false);
   const [consented, setConsented] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   function revokePreview() {
     if (objectUrlRef.current) {
@@ -34,15 +56,26 @@ export function TryOnUpload() {
     }
   }
 
+  function cancelRequest() {
+    requestIdRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setSubmitting(false);
+  }
+
   useEffect(() => {
     return () => {
       revokePreview();
+      abortRef.current?.abort();
     };
   }, []);
 
   function clearPhoto() {
+    cancelRequest();
     revokePreview();
+    fileRef.current = null;
     setPreviewUrl(null);
+    setResultUrl(null);
     setError(null);
     setHasValidPhoto(false);
     setConsented(false);
@@ -53,8 +86,11 @@ export function TryOnUpload() {
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
+    cancelRequest();
     revokePreview();
+    fileRef.current = null;
     setPreviewUrl(null);
+    setResultUrl(null);
     setHasValidPhoto(false);
     setConsented(false);
 
@@ -66,14 +102,18 @@ export function TryOnUpload() {
 
     const url = URL.createObjectURL(file);
     objectUrlRef.current = url;
+    fileRef.current = file;
     setPreviewUrl(url);
     setError(null);
     setHasValidPhoto(true);
   }
 
   function handleImageError() {
+    cancelRequest();
     revokePreview();
+    fileRef.current = null;
     setPreviewUrl(null);
+    setResultUrl(null);
     setHasValidPhoto(false);
     setError(TRYON_ERROR_INVALID);
     if (inputRef.current) {
@@ -81,13 +121,87 @@ export function TryOnUpload() {
     }
   }
 
-  const status = error
-    ? error
-    : hasValidPhoto && consented
-      ? TRYON_STATUS_READY
-      : hasValidPhoto
-        ? TRYON_STATUS_VALID
-        : null;
+  async function handleGenerate() {
+    const file = fileRef.current;
+    if (!file || !hasValidPhoto || !consented || submitting) {
+      return;
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const requestId = ++requestIdRef.current;
+    setSubmitting(true);
+    setError(null);
+    setResultUrl(null);
+
+    const body = new FormData();
+    body.append("photo", file);
+    body.append("productSlug", productSlug);
+    body.append("consent", "true");
+    if (size) {
+      body.append("size", size);
+    }
+    if (color) {
+      body.append("color", color);
+    }
+
+    try {
+      const response = await fetch("/api/tryon", {
+        method: "POST",
+        body,
+        signal: controller.signal,
+      });
+      const payload: unknown = await response.json();
+      if (requestId !== requestIdRef.current || controller.signal.aborted) {
+        return;
+      }
+
+      if (
+        response.ok &&
+        payload &&
+        typeof payload === "object" &&
+        "ok" in payload &&
+        payload.ok === true &&
+        "imageDataUrl" in payload &&
+        isTryonImageDataUrl(payload.imageDataUrl)
+      ) {
+        setResultUrl(payload.imageDataUrl);
+        return;
+      }
+
+      const message =
+        payload &&
+        typeof payload === "object" &&
+        "ok" in payload &&
+        payload.ok === false &&
+        "message" in payload &&
+        typeof payload.message === "string"
+          ? payload.message
+          : TRYON_UNAVAILABLE;
+      setError(message);
+    } catch {
+      if (requestId === requestIdRef.current && !controller.signal.aborted) {
+        setError(TRYON_UNAVAILABLE);
+      }
+    } finally {
+      if (requestId === requestIdRef.current && !controller.signal.aborted) {
+        setSubmitting(false);
+        abortRef.current = null;
+      }
+    }
+  }
+
+  const canGenerate = hasValidPhoto && consented && !submitting;
+  const status = submitting
+    ? TRYON_STATUS_GENERATING
+    : error
+      ? error
+      : hasValidPhoto && consented
+        ? TRYON_STATUS_READY
+        : hasValidPhoto
+          ? TRYON_STATUS_VALID
+          : null;
 
   return (
     <section aria-labelledby="tryon-heading" className={styles.section}>
@@ -127,6 +241,18 @@ export function TryOnUpload() {
         </div>
       ) : null}
 
+      {resultUrl ? (
+        <div className={styles.previewFrame}>
+          {/* Generated data URLs are ephemeral in memory; next/image cannot own that. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt={TRYON_RESULT_ALT} className={styles.preview} src={resultUrl} />
+        </div>
+      ) : null}
+
+      {resultUrl ? (
+        <p className={styles.approximation}>{TRYON_APPROXIMATION_NOTICE}</p>
+      ) : null}
+
       {status ? (
         <p
           aria-live="polite"
@@ -151,10 +277,15 @@ export function TryOnUpload() {
       </label>
 
       <div className={styles.actions}>
-        <button className={styles.generate} disabled type="button">
+        <button
+          className={styles.generate}
+          disabled={!canGenerate}
+          onClick={handleGenerate}
+          type="button"
+        >
           {TRYON_GENERATE_LABEL}
         </button>
-        {previewUrl || error ? (
+        {previewUrl || error || resultUrl ? (
           <button className={styles.clear} onClick={clearPhoto} type="button">
             {TRYON_CLEAR_LABEL}
           </button>

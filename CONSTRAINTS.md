@@ -45,15 +45,24 @@ Reglas durables que las features futuras deben respetar.
 
 ## Foto de prueba virtual
 
-- **Tratar la foto de entrada como dato personal**. Razón: viajará a
-  `inference.devexpert.io` cuando se conecte la generación.
+- **Tratar la foto de entrada como dato personal**. Razón: viaja a
+  `inference.devexpert.io` para la edición de imagen.
 - **Mostrar el aviso de privacidad y el consentimiento antes de cualquier envío**.
   El aviso debe nombrar que es un dato personal, el destino
   `inference.devexpert.io` y que la tienda no guarda la foto. Razón: el usuario
   decide con información suficiente.
-- **MUST NOT persistir la foto de entrada** en `TryonImage`, disco, cookies ni
-  `localStorage` en este slice; solo memoria del navegador y object URLs
-  revocadas al cambiar, limpiar o desmontar. Razón: no retener un dato personal
-  más de lo necesario.
+- **MUST revalidar el consentimiento en el servidor** (`consent=true` en
+  `POST /api/tryon`) además del checkbox de la isla. Razón: el cliente no es
+  una frontera de confianza.
+- **MUST generar con `images.edit` vía `aiProvider`** y el modelo
+  `DEVEXPERT_IMAGE_MODEL` (`image-edit` por defecto), sin
+  `images/generations` y sin que el navegador elija modelo, URL o prompt.
+  Razón: mantener la frontera server-only y el contrato del proveedor.
+- **MUST NOT persistir la foto de entrada ni el resultado** en `TryonImage`,
+  disco, `public/`, cookies ni `localStorage`; solo memoria del navegador
+  (object URL de preview y data URL del resultado). Recargar descarta ambos.
+  Razón: no retener un dato personal ni una imagen generada más de lo necesario.
 - **MUST NOT importar `src/lib/server/ai/` desde la isla de subida**. Razón:
   la foto no debe acercar secretos ni el adapter al bundle del cliente.
+- **MUST NOT fetchear una URL devuelta por el proveedor** si falta `b64_json`.
+  Razón: evitar SSRF y no exponer destinos del proveedor al cliente.

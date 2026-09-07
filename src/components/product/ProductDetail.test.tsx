@@ -1,6 +1,6 @@
 import { createElement } from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -59,7 +59,38 @@ const product = {
   ],
 } as const;
 
+function getTryOnFileInput() {
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!input) {
+    throw new Error("missing try-on file input");
+  }
+  return input;
+}
+
 describe("ProductDetail", () => {
+  const createObjectURL = vi.fn(() => "blob:tryon-preview");
+  const revokeObjectURL = vi.fn();
+
+  beforeEach(() => {
+    createObjectURL.mockClear();
+    revokeObjectURL.mockClear();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      writable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      writable: true,
+      value: revokeObjectURL,
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it("renders the product and a native GET variant form", () => {
     render(
       <ProductDetail
@@ -95,14 +126,58 @@ describe("ProductDetail", () => {
     expect(
       screen.getByRole("heading", { level: 2, name: "Prueba virtual" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByLabelText("Elige una foto", { hidden: true }),
-    ).toBeInTheDocument();
+    expect(getTryOnFileInput()).toHaveAttribute("aria-label", "Elige una foto");
     expect(screen.getByText(/inference\.devexpert\.io/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Generar prueba virtual" }),
     ).toBeDisabled();
     expect(screen.queryByText(/carrito/iu)).not.toBeInTheDocument();
+    expect(ProductDetail.toString()).not.toMatch(/use client/i);
+  });
+
+  it("enables try-on generation with the URL-backed slug and selection", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ok: true,
+        imageDataUrl: "data:image/png;base64,iVBORw0KGgo=",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <ProductDetail
+        product={product}
+        selection={{
+          size: "XL",
+          color: "Azul",
+          variant: product.variants[2],
+          hasInvalidValue: false,
+          hasInvalidCombination: false,
+        }}
+      />,
+    );
+
+    fireEvent.change(getTryOnFileInput(), {
+      target: {
+        files: [new File([new Uint8Array(32)], "foto.jpg", { type: "image/jpeg" })],
+      },
+    });
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: "Entiendo que mi foto se enviará al proveedor de IA",
+      }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Generar prueba virtual" }),
+    );
+
+    const body = fetchMock.mock.calls[0][1].body as FormData;
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/tryon");
+    expect(body.get("productSlug")).toBe("camiseta-basica");
+    expect(body.get("size")).toBe("XL");
+    expect(body.get("color")).toBe("Azul");
+    expect(body.get("consent")).toBe("true");
   });
 
   it("shows exact price and available stock for a selected variant", () => {
