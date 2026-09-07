@@ -36,8 +36,8 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 ### Chatbot IA
 - Endpoint `POST /chat/completions` (OpenAI-compatible).
 - Modelo diario: `chat`. Para tareas complejas: `chat-pro`.
-- Inyectar contexto del catálogo en el prompt (o RAG con embeddings) para recomendar productos válidos.
-- Opcional: búsqueda semántica del catálogo vía embeddings (modelo `embedding`, endpoint `POST /embeddings`).
+- Inyectar directamente el catálogo pequeño en el prompt para recomendar productos válidos; la salida usa JSON con IDs y se reconstruye en servidor, sin embeddings/RAG por ahora.
+- La búsqueda semántica vía embeddings queda fuera mientras el catálogo siga siendo pequeño; la calidad subjetiva del modelo real sigue pendiente de probar con una clave real.
 
 ### Try-on (prueba virtual)
 - Uso de edición de imagen con imagen de entrada: `POST /images/edits`, modelo `image-edit` (enviar en `multipart/form-data` la foto del usuario + prompt con la prenda).
@@ -98,7 +98,7 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
   en pares completos. Mensaje 1–2000 caracteres; hasta 10 mensajes de historial de
   1–4000 caracteres cada uno; cuerpo limitado durante lectura a 64 KiB reales.
   Campos extra y roles privilegiados se rechazan. Origin explícito ajeno se rechaza.
-- Éxito 200 `{ ok: true, reply }`; errores 400/413 de entrada, 429 de cupo y 503
+- Éxito 200 `{ ok: true, reply, recommendations }`; cada recomendación es una tarjeta reconstruida por servidor desde IDs de catálogo y puede incluir una variante exacta disponible. Errores 400/413 de entrada, 429 de cupo y 503
   de configuración/red/DB/proveedor con `{ ok: false, message }` constante seguro.
   Todas estas respuestas llevan `Cache-Control: no-store`.
 - Catálogo fresco por envío, inyección JSON directa de los 6 productos/24 variantes,

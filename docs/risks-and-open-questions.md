@@ -42,5 +42,5 @@
 ## Research Tasks
 
 - Investigar cómo lograr el mejor resultado de **try-on** con el endpoint de edición (`image-edit`, multipart con foto + prompt de la prenda) de DevExpert Inference, y cómo acotar expectativas realistas.
-- **Contexto de conversación resuelto para `chatbot-conversation`**: inyección directa del catálogo fresco (6 productos/24 variantes). Evaluar búsqueda semántica solo si crece el catálogo o lo requiere `chatbot-recommend`. Calidad semántica del proveedor real pendiente: pruebas realizadas con fakes/mock local, sin consumir clave real.
+- **Contexto y recomendaciones del chatbot resueltos**: inyección directa del catálogo fresco (6 productos/24 variantes), salida JSON con IDs, validación server-side y hasta tres tarjetas internas con disponibilidad. Embeddings/RAG siguen fuera por el tamaño actual; calidad semántica del proveedor real pendiente porque las pruebas usan fakes/mock local, sin consumir clave real.
 - Decidir ORM y configuración SQLite para arrancar en local con `pnpm`. **Resuelto (bootstrap-stack)**: Prisma v6 + SQLite (`DATABASE_URL="file:./dev.db"`), datasource mínimo cableado; modelos/migraciones en `bootstrap-seed`.

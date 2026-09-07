@@ -35,3 +35,10 @@ Reglas durables que las features futuras deben respetar.
   No registrar conversaciones ni persistirlas sin una decisión explícita posterior.
   Razón: evitar acceso a datos privados e interpretación de contenido generativo
   como HTML; la conversación actual solo vive en memoria del navegador.
+- **Limitar la salida estructurada del chat a JSON acotado y candidatos por IDs**:
+  validar producto/variante contra el catálogo fresco, exigir stock positivo,
+  deduplicar y mostrar como máximo tres recomendaciones. El modelo nunca controla
+  nombres, precios, imágenes, stock, slugs ni URLs visibles; para un producto sin
+  variante debe existir alguna variante disponible. Razón: mantener la garantía de
+  pertenencia y disponibilidad de las tarjetas sin convertir texto generativo en
+  datos de catálogo.

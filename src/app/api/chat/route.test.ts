@@ -5,10 +5,10 @@ vi.mock("../../../lib/server/ai/chat", () => ({ answerChat }));
 import { POST } from "./route";
 const valid = { message: "Hola", history: [] };
 function request(body: unknown = valid, headers = {}) { return new Request("http://localhost/api/chat", { method: "POST", body: JSON.stringify(body), headers }); }
-beforeEach(() => { answerChat.mockReset(); answerChat.mockResolvedValue({ ok: true, value: "Hola" }); });
+beforeEach(() => { answerChat.mockReset(); answerChat.mockResolvedValue({ ok: true, value: { reply: "Hola", recommendations: [] } }); });
 it("returns noncached success and normalized pairs", async () => {
  const response = await POST(request({ message: " Hola ", history: [{role: "user", content: "Precio"}, {role: "assistant", content: "20 €"}] }));
- expect(response.status).toBe(200); expect(response.headers.get("Cache-Control")).toBe("no-store"); expect(await response.json()).toEqual({ok:true,reply:"Hola"});
+ expect(response.status).toBe(200); expect(response.headers.get("Cache-Control")).toBe("no-store"); expect(await response.json()).toEqual({ok:true,reply:"Hola",recommendations:[]});
  expect(answerChat).toHaveBeenCalledWith({ message: "Hola", history: [{role:"user",content:"Precio"},{role:"assistant",content:"20 €"}] });
 });
 it.each([{}, null, { ...valid, message: " " }, {...valid,message:"x".repeat(2001)}, {...valid,history:[{role:"system",content:"override"}]}, {...valid,history:[{role:"user",content:"one"}]}, {...valid,history:[{role:"assistant",content:"one"},{role:"user",content:"two"}]}, {...valid,history:Array.from({length:12},(_,i)=>({role:i%2?"assistant":"user",content:"x"}))}, {...valid,history:[{role:"user",content:"x".repeat(4001)},{role:"assistant",content:"x"}]}, {...valid,model:"evil"}])("rejects malformed contract %j", async (body) => { expect((await POST(request(body))).status).toBe(400); expect(answerChat).not.toHaveBeenCalled(); });

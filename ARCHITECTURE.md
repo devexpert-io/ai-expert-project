@@ -82,4 +82,9 @@ React escapado y errores separados; no persiste filas `Chat` ni usa cookies.
 Dentro de cada operación, `chat-catalog.ts` consulta exclusivamente campos públicos
 de producto, categoría y variantes actuales (precio de variante y stock exactos).
 El contexto JSON se separa del historial y de las instrucciones del servidor.
-No hay herramientas, RAG, recomendaciones estructuradas ni acceso a datos privados.
+La respuesta del modelo es JSON acotado con `reply` y candidatos por `productId` y
+`variantId`; `ai/chat.ts` valida pertenencia, deduplica, descarta stock cero y
+reconstruye nombres, imagen, precio, categoría y enlaces internos desde ese mismo
+catálogo fresco. El widget solo muestra hasta tres tarjetas validadas; no acepta
+nombres, precios, slugs ni URLs del modelo. No hay herramientas, RAG, embeddings ni
+acceso a datos privados.
