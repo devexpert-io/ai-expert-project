@@ -21,7 +21,7 @@ export const TRYON_CLEAR_LABEL = "Quitar foto";
 export const TRYON_GENERATE_LABEL = "Generar prueba virtual";
 export const TRYON_STATUS_VALID = "La foto es válida.";
 export const TRYON_STATUS_READY =
-  "La foto está lista. La generación aún no está conectada.";
+  "La foto está lista para generar la prueba virtual.";
 
 export type TryonFileLike = Pick<File, "type" | "size">;
 

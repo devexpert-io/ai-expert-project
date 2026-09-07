@@ -1,6 +1,12 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  TRYON_APPROXIMATION_NOTICE,
+  TRYON_RESULT_ALT,
+  TRYON_STATUS_GENERATING,
+  TRYON_UNAVAILABLE,
+} from "../../lib/tryon";
 import {
   TRYON_ACCEPT,
   TRYON_CLEAR_LABEL,
@@ -19,16 +25,38 @@ import {
 
 import { TryOnUpload } from "./TryOnUpload";
 
-function makeFile(
-  name: string,
-  type: string,
-  size = 32,
-): File {
+const RESULT_URL = "data:image/png;base64,iVBORw0KGgo=";
+
+function makeFile(name: string, type: string, size = 32): File {
   return new File([new Uint8Array(size)], name, { type });
 }
 
 function getFileInput() {
-  return screen.getByLabelText(TRYON_FILE_LABEL, { hidden: true });
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!input) {
+    throw new Error("missing try-on file input");
+  }
+  expect(input).toHaveAttribute("aria-label", TRYON_FILE_LABEL);
+  return input;
+}
+
+function renderUpload(
+  props: { productSlug?: string; size?: string | null; color?: string | null } = {},
+) {
+  return render(
+    <TryOnUpload
+      color={props.color ?? null}
+      productSlug={props.productSlug ?? "camiseta-basica"}
+      size={props.size ?? null}
+    />,
+  );
+}
+
+function readyPhoto() {
+  fireEvent.change(getFileInput(), {
+    target: { files: [makeFile("foto.jpg", "image/jpeg")] },
+  });
+  fireEvent.click(screen.getByRole("checkbox", { name: TRYON_CONSENT_LABEL }));
 }
 
 describe("TryOnUpload", () => {
@@ -56,7 +84,7 @@ describe("TryOnUpload", () => {
   });
 
   it("renders the labeled upload, privacy notice and a disabled generate control", () => {
-    render(<TryOnUpload />);
+    renderUpload();
 
     expect(
       screen.getByRole("heading", { level: 2, name: "Prueba virtual" }),
@@ -77,7 +105,7 @@ describe("TryOnUpload", () => {
   });
 
   it("shows a local preview and valid status for an allowed image", () => {
-    render(<TryOnUpload />);
+    renderUpload();
 
     fireEvent.change(getFileInput(), {
       target: { files: [makeFile("foto.jpg", "image/jpeg")] },
@@ -96,7 +124,7 @@ describe("TryOnUpload", () => {
   });
 
   it("announces constant errors and skips preview for invalid files", () => {
-    render(<TryOnUpload />);
+    renderUpload();
     const input = getFileInput();
 
     fireEvent.change(input, {
@@ -135,7 +163,7 @@ describe("TryOnUpload", () => {
   });
 
   it("revokes a previous preview when the next file is invalid", () => {
-    render(<TryOnUpload />);
+    renderUpload();
     const input = getFileInput();
 
     fireEvent.change(input, {
@@ -153,7 +181,7 @@ describe("TryOnUpload", () => {
   });
 
   it("treats an undecodable image as invalid and revokes the object URL", () => {
-    render(<TryOnUpload />);
+    renderUpload();
 
     fireEvent.change(getFileInput(), {
       target: { files: [makeFile("roto.webp", "image/webp")] },
@@ -165,36 +193,133 @@ describe("TryOnUpload", () => {
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:tryon-preview");
   });
 
-  it("keeps generate disabled after consent and does not send the photo", () => {
-    const fetchMock = vi.fn();
+  it("enables generate after consent and sends the current selection", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, imageDataUrl: RESULT_URL }),
+    });
     vi.stubGlobal("fetch", fetchMock);
     const setItem = vi.spyOn(Storage.prototype, "setItem");
 
-    render(<TryOnUpload />);
-    fireEvent.change(getFileInput(), {
-      target: { files: [makeFile("foto.jpg", "image/jpeg")] },
-    });
-    fireEvent.click(screen.getByRole("checkbox", { name: TRYON_CONSENT_LABEL }));
+    renderUpload({ size: "S", color: "Negro" });
+    readyPhoto();
 
     expect(screen.getByRole("status")).toHaveTextContent(TRYON_STATUS_READY);
-    expect(
-      screen.getByRole("button", { name: TRYON_GENERATE_LABEL }),
-    ).toBeDisabled();
-    expect(fetchMock).not.toHaveBeenCalled();
+    const generate = screen.getByRole("button", { name: TRYON_GENERATE_LABEL });
+    expect(generate).toBeEnabled();
+
+    fireEvent.click(generate);
+
+    await waitFor(() => {
+      expect(screen.getByAltText(TRYON_RESULT_ALT)).toHaveAttribute(
+        "src",
+        RESULT_URL,
+      );
+    });
+    expect(screen.getByText(TRYON_APPROXIMATION_NOTICE)).toBeInTheDocument();
+    expect(screen.getByAltText(TRYON_PREVIEW_ALT)).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/tryon");
+    expect(init.method).toBe("POST");
+    const body = init.body as FormData;
+    expect(body.get("productSlug")).toBe("camiseta-basica");
+    expect(body.get("consent")).toBe("true");
+    expect(body.get("size")).toBe("S");
+    expect(body.get("color")).toBe("Negro");
+    expect(body.get("photo")).toBeInstanceOf(File);
     expect(setItem).not.toHaveBeenCalled();
   });
 
-  it("clears the preview, consent and input when removing the photo", () => {
-    render(<TryOnUpload />);
-    const input = getFileInput() as HTMLInputElement;
+  it("announces processing, disables the button and blocks a second fetch", async () => {
+    let resolveRequest!: (value: unknown) => void;
+    const fetchMock = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
 
-    fireEvent.change(input, {
-      target: { files: [makeFile("foto.jpg", "image/jpeg")] },
+    renderUpload();
+    readyPhoto();
+    const generate = screen.getByRole("button", { name: TRYON_GENERATE_LABEL });
+    fireEvent.click(generate);
+    fireEvent.click(generate);
+
+    expect(screen.getByRole("status")).toHaveTextContent(TRYON_STATUS_GENERATING);
+    expect(generate).toBeDisabled();
+    expect(fetchMock).toHaveBeenCalledOnce();
+
+    resolveRequest({
+      ok: true,
+      json: async () => ({ ok: true, imageDataUrl: RESULT_URL }),
     });
-    fireEvent.click(screen.getByRole("checkbox", { name: TRYON_CONSENT_LABEL }));
+    await waitFor(() => {
+      expect(screen.getByAltText(TRYON_RESULT_ALT)).toBeInTheDocument();
+    });
+  });
+
+  it("keeps the preview and allows retry after a controlled error", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        ok: false,
+        message: "El cupo semanal de IA está agotado. Inténtalo de nuevo más tarde.",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderUpload();
+    readyPhoto();
+    fireEvent.click(screen.getByRole("button", { name: TRYON_GENERATE_LABEL }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("cupo semanal");
+    });
+    expect(screen.getByAltText(TRYON_PREVIEW_ALT)).toBeInTheDocument();
+    expect(screen.queryByAltText(TRYON_RESULT_ALT)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: TRYON_GENERATE_LABEL }),
+    ).toBeEnabled();
+    expect(screen.queryByText(/stack|DEVEXPERT_API_KEY/i)).not.toBeInTheDocument();
+  });
+
+  it("shows a safe fallback when the response is malformed", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true, imageDataUrl: "https://evil.example/x.png" }),
+      }),
+    );
+
+    renderUpload();
+    readyPhoto();
+    fireEvent.click(screen.getByRole("button", { name: TRYON_GENERATE_LABEL }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent(TRYON_UNAVAILABLE);
+    });
+    expect(screen.queryByAltText(TRYON_RESULT_ALT)).not.toBeInTheDocument();
+  });
+
+  it("clears preview, result, consent and aborts an in-flight request", async () => {
+    const abortSpy = vi.spyOn(AbortController.prototype, "abort");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => undefined)),
+    );
+
+    renderUpload();
+    const input = getFileInput() as HTMLInputElement;
+    readyPhoto();
+    fireEvent.click(screen.getByRole("button", { name: TRYON_GENERATE_LABEL }));
     fireEvent.click(screen.getByRole("button", { name: TRYON_CLEAR_LABEL }));
 
+    expect(abortSpy).toHaveBeenCalled();
     expect(screen.queryByAltText(TRYON_PREVIEW_ALT)).not.toBeInTheDocument();
+    expect(screen.queryByAltText(TRYON_RESULT_ALT)).not.toBeInTheDocument();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:tryon-preview");
     expect(
       screen.getByRole("checkbox", { name: TRYON_CONSENT_LABEL }),
@@ -206,14 +331,19 @@ describe("TryOnUpload", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("revokes the object URL when the section unmounts", () => {
-    const { unmount } = render(<TryOnUpload />);
+  it("revokes the object URL and aborts when the section unmounts", () => {
+    const abortSpy = vi.spyOn(AbortController.prototype, "abort");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => undefined)),
+    );
+    const { unmount } = renderUpload();
 
-    fireEvent.change(getFileInput(), {
-      target: { files: [makeFile("foto.jpg", "image/jpeg")] },
-    });
+    readyPhoto();
+    fireEvent.click(screen.getByRole("button", { name: TRYON_GENERATE_LABEL }));
     unmount();
 
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:tryon-preview");
+    expect(abortSpy).toHaveBeenCalled();
   });
 });

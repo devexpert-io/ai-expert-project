@@ -89,13 +89,24 @@ catálogo fresco. El widget solo muestra hasta tres tarjetas validadas; no acept
 nombres, precios, slugs ni URLs del modelo. No hay herramientas, RAG, embeddings ni
 acceso a datos privados.
 
-## Prueba virtual (subida)
+## Prueba virtual
 
 `TryOnUpload` es una isla `use client` montada al final de la columna de
 información de `ProductDetail`. La ficha y `/products/[slug]` siguen siendo
 Server Components. El visitante elige un JPG/PNG/WebP de hasta 5 MiB; la
 validación MIME/tamaño vive en `src/lib/tryon-upload.ts` (sin `server-only`) y
-la preview usa `URL.createObjectURL` en memoria. Recargar o «Quitar foto»
-descarta el archivo. Este slice no llama a DevExpert, no crea `POST /api/tryon`
-ni escribe `TryonImage`, disco, cookies o `localStorage`. El botón de generar
-permanece deshabilitado hasta `tryon-result`.
+la preview usa `URL.createObjectURL` en memoria.
+
+`POST /api/tryon` (Node, `maxDuration` 60, `Cache-Control: no-store`) lee hasta
+6 MiB reales, exige consentimiento y slug, rechaza Origin ajeno y campos extra,
+y delega en `src/lib/server/ai/tryon.ts`. Ese servicio resuelve el producto con
+`getProductDetailBySlug`, construye un prompt fijo en español (nombre, categoría,
+descripción y variante exacta si existe) y llama a `aiProvider.run` →
+`client.images.edit` con `models.image` (`DEVEXPERT_IMAGE_MODEL`, default
+`image-edit`), `n: 1`, `response_format: "b64_json"` y timeout 60 s. El cliente
+nunca elige modelo, URL ni prompt.
+
+El resultado es un `data:image/png|jpeg;base64,...` efímero en memoria. Recargar
+o «Quitar foto» descarta foto y resultado. No se escribe `TryonImage`, disco,
+`public/`, cookies ni `localStorage`. Una respuesta con solo `url` se trata como
+`provider_error` sin fetch. Stock no bloquea la generación.

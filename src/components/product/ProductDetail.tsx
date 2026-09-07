@@ -196,7 +196,11 @@ export default function ProductDetail({
             {getSelectionMessage(selection)}
           </p>
 
-          <TryOnUpload />
+          <TryOnUpload
+            color={selection.color}
+            productSlug={product.slug}
+            size={selection.size}
+          />
         </div>
       </article>
     </main>

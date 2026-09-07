@@ -224,14 +224,20 @@
     "title": "Generación y muestra del resultado de la prueba virtual",
     "user_visible_behavior": "El usuario envía la foto y ve la prenda puesta generada sobre su imagen, o un error claro si falla.",
     "depends_on": ["tryon-upload", "ai-provider-config"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Al enviar la foto se genera y muestra la imagen con la prenda puesta.",
       "El estado de procesamiento se muestra durante la generación.",
       "Un fallo del proveedor (o cupo agotado) muestra un error controlado sin romper la página."
     ],
-    "evidence": [],
-    "notes": "Edición de imagen vía POST /images/edits con modelo image-edit (multipart: foto + prompt de la prenda). Proveedor/modelo configurable. Estados Solicitado→Generado|Error en domain-model.md. Expectativas acotadas (riesgo alto en risks)."
+    "evidence": [
+      "Implementada POST /api/tryon + src/lib/server/ai/tryon.ts + isla TryOnUpload habilitada. Resultado efímero data URL; sin TryonImage/disco/cookies/localStorage; ProductDetail sigue Server Component.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/tryon-upload.test.ts src/lib/tryon.test.ts src/lib/server/ai/tryon.test.ts src/app/api/tryon/route.test.ts src/components/tryon/TryOnUpload.test.tsx src/components/product/ProductDetail.test.tsx -> exit 0 (20 archivos, 132 tests) con Node v22.12.0 / pnpm 10.18.3.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm lint -> exit 0; pnpm typecheck -> exit 0; git diff --check -> exit 0.",
+      "Prueba manual del usuario 2026-09-07: envío, procesando, resultado y error controlado funcionan en la ficha.",
+      "Aceptada por decisión explícita del usuario; se omitieron el cierre del gate ./init.sh y el rol validator, igual que tryon-upload."
+    ],
+    "notes": "Aceptada por decisión del usuario. La foto y el resultado son efímeros; no se persiste TryonImage. Calidad visual real del proveedor no se midió con el gate."
   },
   {
     "id": "cart-add",
