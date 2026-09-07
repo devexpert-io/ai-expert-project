@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `chatbot-recommend` con `feature-spec`
+- Siguiente paso: planificar `tryon-result` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `chatbot-conversation` aceptada por validador independiente, 84 tests y smoke con mock local, 2026-09-07; gate completo previo en verde y repetición posterior bloqueada por el entorno (ver sesión 009)
+- Última verificación: `tryon-upload` aceptada por decisión explícita del usuario (2026-09-07); se omitieron gate `./init.sh` y rol validator
 
 ## Registro de sesión
 
@@ -211,3 +211,42 @@
 - Smoke del orquestador: build en 4340 y mock OpenAI en 4339; ID inventado y duplicado descartados, dos tarjetas válidas. CUA confirmó Camiseta básica L/Blanco (19,90 €, 8 unidades) y Abrigo ligero (89,90 €) al abrir sus enlaces; seguimiento informativo conserva tarjetas previas. UI revisada a 1280x900 y 390x844 con scroll y controles alcanzables; viewport restaurado.
 - Riesgo o cuestión no resuelta: no existe harness E2E persistente; pruebas offline y smoke con mock verifican integración, sin medir calidad semántica del proveedor real.
 - Siguiente mejor paso: continuar con `tryon-upload` mediante `feature-spec`.
+
+### Sesión 011 — `tryon-upload`
+
+- Fecha: 2026-09-07
+- Objetivo: añadir en el detalle la subida local de foto con preview, validación y aviso de privacidad, sin generación ni persistencia.
+- Completado:
+  - Contrato `src/lib/tryon-upload.ts`: MIME JPG/PNG/WebP, 5 MiB, mensajes constantes, textos de privacidad.
+  - Isla `TryOnUpload` con input etiquetado, preview `<img>`, object URLs revocadas, checkbox, «Quitar foto» y «Generar prueba virtual» siempre `disabled`.
+  - Montaje al final de `ProductDetail` sin convertir ficha ni página a Client Component.
+  - Docs: `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/technical-discovery.md`, `docs/risks-and-open-questions.md`.
+- Verificación ejecutada y evidencia:
+  - Tests focalizados + suite: 103 tests en verde (Node v22.23.2 / pnpm 10.18.3) antes del fallo de install.
+  - `pnpm lint` y `pnpm typecheck` en verde; `git diff --check` limpio.
+  - Smoke en `/products/camiseta-basica`: preview válida, error GIF, aviso `inference.devexpert.io`, botón disabled, sin fetch.
+  - `CI=true ./init.sh` falló al recrear dependencias: EPERM `mkdir .../iconv-lite_tmp_*/.idea`. `node_modules` quedó sin `next`/`@prisma/client`. `pnpm build` no se ejecutó. El servidor de desarrollo existente pasó a HTTP 500 al recargar.
+- Estado: `tryon-upload` en `in_progress` (implementada, gate incompleto). No `passing` ni `accepted`.
+- Riesgo o cuestión no resuelta: hay que restaurar dependencias fuera de este sandbox (`pnpm install`) y repetir `./init.sh`. La generación sigue en `tryon-result`.
+- Siguiente mejor paso: restaurar `node_modules`, repetir `CI=true ./init.sh` y validar con `feature-validator`.
+
+### Sesión 012 — `tryon-upload` restore/gate
+
+- Fecha: 2026-09-07
+- Objetivo: restaurar `node_modules` y completar `CI=true ./init.sh` sin cambiar producto.
+- Completado: ningún restore exitoso. `PATH=.../node@22:... pnpm install --frozen-lockfile` (Node v22.23.2, pnpm 10.18.3) sigue ejecutándose en sandbox y falla con `EPERM mkdir .../iconv-lite_tmp_*/.idea`. No se relanzó `./init.sh` porque `next` y `@prisma/client` siguen ausentes.
+- Estado: `tryon-upload` permanece `in_progress`. No `passing` ni `accepted`.
+- Riesgo: el Shell de este agente no aplica ejecución unrestricted; el orquestador o un operador local debe correr `pnpm install` y `CI=true ./init.sh` fuera del sandbox.
+- Siguiente mejor paso: install + gate fuera del sandbox; si exit 0, marcar `passing` con esa evidencia.
+
+### Sesión 013 — `tryon-upload` accepted
+
+- Fecha: 2026-09-07
+- Objetivo: pulir visualmente el selector de foto y cerrar la feature por decisión del usuario.
+- Completado:
+  - El input nativo queda oculto; la etiqueta es una zona dashed editorial (esquinas rectas, marfil/arena, hint JPG/PNG/WebP).
+  - Botones de la sección alineados con la ficha (radio 0, terracota para el CTA de IA).
+  - `tryon-upload` pasa a `accepted` por petición explícita; se omiten implementer restante, `./init.sh` y validator.
+- Estado: feature `tryon-upload` en `accepted`.
+- Riesgo o cuestión no resuelta: el gate completo no se reejecutó en esta sesión; la generación sigue en `tryon-result`.
+- Siguiente mejor paso: ejecutar `feature-spec` para `tryon-result`.

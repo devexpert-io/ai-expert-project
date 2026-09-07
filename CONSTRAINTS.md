@@ -42,3 +42,18 @@ Reglas durables que las features futuras deben respetar.
   variante debe existir alguna variante disponible. Razón: mantener la garantía de
   pertenencia y disponibilidad de las tarjetas sin convertir texto generativo en
   datos de catálogo.
+
+## Foto de prueba virtual
+
+- **Tratar la foto de entrada como dato personal**. Razón: viajará a
+  `inference.devexpert.io` cuando se conecte la generación.
+- **Mostrar el aviso de privacidad y el consentimiento antes de cualquier envío**.
+  El aviso debe nombrar que es un dato personal, el destino
+  `inference.devexpert.io` y que la tienda no guarda la foto. Razón: el usuario
+  decide con información suficiente.
+- **MUST NOT persistir la foto de entrada** en `TryonImage`, disco, cookies ni
+  `localStorage` en este slice; solo memoria del navegador y object URLs
+  revocadas al cambiar, limpiar o desmontar. Razón: no retener un dato personal
+  más de lo necesario.
+- **MUST NOT importar `src/lib/server/ai/` desde la isla de subida**. Razón:
+  la foto no debe acercar secretos ni el adapter al bundle del cliente.

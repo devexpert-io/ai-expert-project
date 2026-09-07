@@ -205,14 +205,18 @@
     "title": "Subida de foto para la prueba virtual",
     "user_visible_behavior": "En el detalle de producto el usuario sube una foto y ve la validación y el aviso de privacidad.",
     "depends_on": ["product-detail"],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "La página de detalle permite subir una foto con preview.",
       "Una imagen no válida muestra un error controlado.",
       "Se muestra aviso de privacidad antes de enviar la foto al proveedor."
     ],
-    "evidence": [],
-    "notes": "La foto viaja a inference.devexpert.io; tratar como dato personal y no persistir innecesariamente (technical-discovery.md, risks)."
+    "evidence": [
+      "Isla TryOnUpload en ProductDetail: validador MIME/tamaño, preview local con object URL, aviso + checkbox, botón Generar siempre disabled. Sin API, IA, Prisma ni persistencia.",
+      "Revisión manual del usuario 2026-09-07: el control de selección de imagen es visible y usable en la ficha; se pulió a zona editorial dashed alineada con DESIGN.md.",
+      "Aceptada por decisión explícita del usuario; se omitieron el cierre del gate ./init.sh y el rol validator, igual que chatbot-recommend."
+    ],
+    "notes": "Aceptada por decisión del usuario. La foto no se persiste; la generación queda para tryon-result."
   },
   {
     "id": "tryon-result",

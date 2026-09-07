@@ -88,3 +88,14 @@ reconstruye nombres, imagen, precio, categoría y enlaces internos desde ese mis
 catálogo fresco. El widget solo muestra hasta tres tarjetas validadas; no acepta
 nombres, precios, slugs ni URLs del modelo. No hay herramientas, RAG, embeddings ni
 acceso a datos privados.
+
+## Prueba virtual (subida)
+
+`TryOnUpload` es una isla `use client` montada al final de la columna de
+información de `ProductDetail`. La ficha y `/products/[slug]` siguen siendo
+Server Components. El visitante elige un JPG/PNG/WebP de hasta 5 MiB; la
+validación MIME/tamaño vive en `src/lib/tryon-upload.ts` (sin `server-only`) y
+la preview usa `URL.createObjectURL` en memoria. Recargar o «Quitar foto»
+descarta el archivo. Este slice no llama a DevExpert, no crea `POST /api/tryon`
+ni escribe `TryonImage`, disco, cookies o `localStorage`. El botón de generar
+permanece deshabilitado hasta `tryon-result`.

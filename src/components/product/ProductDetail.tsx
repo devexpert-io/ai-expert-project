@@ -6,6 +6,7 @@ import type {
   ProductDetail as ProductDetailViewModel,
   ProductSelection,
 } from "../../lib/server/product-detail";
+import { TryOnUpload } from "../tryon/TryOnUpload";
 
 import styles from "./product-detail.module.css";
 
@@ -194,6 +195,8 @@ export default function ProductDetail({
           >
             {getSelectionMessage(selection)}
           </p>
+
+          <TryOnUpload />
         </div>
       </article>
     </main>
