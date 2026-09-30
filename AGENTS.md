@@ -61,6 +61,17 @@ Una feature está hecha solo cuando se cumple todo:
 - la evidencia está registrada en `feature_list.json` o `PROGRESS.md`,
 - el repo sigue arrancando desde la ruta estándar,
 - los docs relevantes se actualizaron si cambió comportamiento, reglas de dominio, API o verificación.
+- si la feature tiene UI, se validó también en navegador (ver abajo).
+
+## Validación en navegador
+
+Toda feature con UI se valida también en navegador antes de aceptarla, con el MCP `chrome-devtools` configurado en `opencode.json`:
+
+- abrir la app del worktree de la feature (nunca otro checkout), en un puerto propio si el 3000 está ocupado;
+- comprobar 390×844 y 1280×800 contra los criterios de la spec;
+- consola sin errores y sin peticiones fallidas;
+- registrar URL, commit, pasos, esperado y observado;
+- no detener procesos que no haya arrancado el propio agente.
 
 ## Fin de sesión
 
