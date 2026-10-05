@@ -1,6 +1,6 @@
 ---
 name: github-flow
-description: Orchestrate multi-feature GitHub delivery on top of feature-flow using git worktrees and gh issues/PRs. Use when the user asks to plan, execute, or publish feature ids in a GitHub repository, to run features in parallel isolated worktrees with independent opencode sessions, to reuse or create issues, branches, worktrees, or PRs for features, or to publish accepted features as PRs. Modes: plan (planificar, read-only), execute (ejecutar), publish (publicar). Never merges.
+description: "Orchestrate multi-feature GitHub delivery on top of feature-flow using git worktrees and gh issues/PRs. Use when the user asks to plan, execute, or publish feature ids in a GitHub repository, to run features in parallel isolated worktrees with independent opencode sessions, to reuse or create issues, branches, worktrees, or PRs for features, or to publish accepted features as PRs. Modes: plan (planificar, read-only), execute (ejecutar), publish (publicar). Never merges."
 ---
 
 # GitHub Flow
