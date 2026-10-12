@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `orders-list` con `feature-spec`
+- Siguiente paso: planificar `orders-detail` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `checkout-payment` aceptada por validator independiente (2026-10-12); gate252 tests y QA390×844/1280×800.
+- Última verificación: `orders-list` aceptada por validator independiente (2026-10-12); gate258 tests y QA390×844/1280×800.
 
 ## Registro de sesión
 
@@ -440,3 +440,28 @@
 - Validator: **ACCEPT** después de reparar el texto y el reintento; 9 tests focales, lint/typecheck/diff-check OK. Gate final252 tests y capturas de pago aprobado390/1280, rechazo y selector revisadas.
 - Evidencia previa válida: stock/carrito atómicos, snapshot, 401/409, replay y concurrencia sobre última unidad; seed conserva stock vendido.
 - Estado: `accepted`. Siguiente: `orders-list`.
+
+### Sesión 022 — `orders-list`
+
+- Fecha: 2026-10-12
+- Objetivo: permitir que una persona autenticada consulte `/orders` con solo sus pedidos, mostrando estado, total EUR y fecha sin adelantar el detalle.
+- Completado:
+  - Añadido `src/lib/server/orders.ts` con consulta server-only filtrada por `userId`, selección mínima (`id`, `status`, `totalCents`, `createdAt`), orden estable descendente y mapa cerrado de estados; estados desconocidos se omiten.
+  - Añadido `/orders` como Server Component dinámico con guardia `auth_session`/`getSessionUser`, redirección a `/checkout`, estado vacío accesible, tarjetas semánticas y fecha `es-ES` en `Europe/Madrid`.
+  - Añadidos estilos responsive y tests focales; el header global incluye «Mis pedidos» y los targets de utilidades tienen mínimo 44px con wrap móvil.
+  - Actualizados `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/domain-model.md`, `docs/technical-discovery.md` y la evidencia de `feature_list.json`.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3; DB setup/verify, lint, typecheck, 39 archivos/258 tests y build con `/orders`. Log final tras la reparación de targets del header: `/tmp/ai-expert-orders-list-gate-20261012-final-repair.log`.
+  - Prueba focal `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec vitest run src/lib/server/orders.test.ts src/app/orders/page.test.tsx` → 2 archivos/6 tests, exit 0.
+  - `git diff --check` → exit 0; SHA base de trabajo `090c109179ed1f8d4ad929a1b2f1ad33abd2cf52`; no se añadieron dependencias, schema ni migraciones.
+  - Smoke aislado en SQLite temporal con dos usuarios, cookies de sesión, pedidos mezclados y estado desconocido: invitado `307 → /checkout`; cada usuario recibió solo su historial y la UI no mostró IDs, estado interno ni PII. La base temporal y el servidor propio se detuvieron/limpiaron al terminar.
+  - QA Chrome DevTools MCP en `http://127.0.0.1:4468/orders`: emulación exacta `390x844x1,mobile,touch` y `1280x800`; ambos `scrollWidth === clientWidth`, todos los anchors visibles del header (wordmark, navegación y utilidades) midieron `minHeight=44px` y foco visible, peticiones GET/CSS/chunks/icon 200 y consola solo info React DevTools. Capturas revisadas: `/tmp/orders-list-repair-390.png`, `/tmp/orders-list-repair-1280.png`; servidor propio detenido y DB temporal limpiada al terminar.
+- Estado: `orders-list` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo o cuestión no resuelta: la página usa un mapa cerrado y omite estados desconocidos; el detalle, enlaces por pedido y cualquier API permanecen fuera de alcance. Los avisos conocidos de pnpm/Prisma no afectan al gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `orders-list`.
+
+### Aceptación independiente — `orders-list`
+
+- Validator: **ACCEPT** tras reparar targets44px de todo el header. Gate258 tests; focal6 tests/diff-check OK, capturas390/1280 revisadas.
+- Validó aislamiento por propietario, select mínimo, estados desconocidos omitidos, vacío en navegador e invitado307→checkout.
+- Estado:`accepted`. Siguiente:`orders-detail`.

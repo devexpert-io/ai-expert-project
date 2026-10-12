@@ -75,6 +75,9 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 - `POST /api/auth/checkout` acepta solo `{ mode, email, password, name, phone, shippingAddress }`, valida Origin/body cerrado y realiza usuario/contacto, merge del carrito y sesión en una transacción. Email duplicado, credencial inválida, sesión activa y overflow responden sin mutación parcial ni secretos.
 - Con sesión válida, `/cart`, `/checkout` y las APIs del carrito resuelven el `Cart` por `userId`; el carrito invitado se asocia o fusiona sumando líneas y el `cart_guest_token` antiguo se revoca y expira. Sin sesión se conserva exactamente el contrato invitado.
 - Los pedidos solo son visibles para el usuario propietario.
+- `/orders` no acepta identidad por URL, query, formulario o JSON. La sesión se
+  resuelve en servidor y una cookie ausente, inválida o caducada redirige a
+  `/checkout` sin consultar `Order`.
 
 ## Deployment and Operations
 
@@ -123,6 +126,20 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
   «Pago simulado — no se ha realizado ningún cargo», conserva la clave para un
   reintento de red, crea otra después de `CANCELLED`, y no guarda clave ni resultado
   en `sessionStorage`.
+
+### Contrato implementado del listado de pedidos (`orders-list`)
+
+- `/orders` es un Server Component dinámico. Lee `auth_session` con `cookies()` y
+  llama a `getSessionUser`; sin cookie o con sesión inválida redirige a
+  `/checkout` antes de llamar a `getUserOrders`.
+- `src/lib/server/orders.ts` consulta solo `Order` del `userId` autenticado con
+  `select: { id, status, totalCents, createdAt }` y `orderBy` descendente por
+  `createdAt` e `id`. La UI mantiene el ID como clave interna, no lo imprime ni
+  expone líneas, variantes, cantidades o PII.
+- El mapa cerrado traduce `PAID`, `CANCELLED` y `PENDING_PAYMENT` a «Pagado»,
+  «Cancelado» y «Pendiente de pago»; estados desconocidos se omiten. La fecha se
+  formatea en `es-ES` con zona `Europe/Madrid`, y el vacío ofrece un enlace al
+  catálogo. Este slice no crea API de pedidos ni detalle.
 
 ## Contrato implementado del carrito anónimo (`cart-add`)
 

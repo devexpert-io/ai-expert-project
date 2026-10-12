@@ -43,7 +43,7 @@ img {
   z-index: 10;
   display: grid;
   min-height: 58px;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   align-items: center;
   gap: 16px;
   border-bottom: 1px solid rgba(29, 27, 24, 0.12);
@@ -52,6 +52,9 @@ img {
 }
 
 .site-wordmark {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   width: fit-content;
   font-family: var(--font-editorial);
   font-size: 1.35rem;
@@ -77,6 +80,9 @@ img {
 }
 
 .site-navigation a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   text-decoration: none;
 }
 
@@ -87,12 +93,16 @@ img {
 
 .site-utilities {
   display: flex;
-  justify-self: end;
+  flex-wrap: wrap;
+  justify-self: start;
   gap: 12px;
   font-size: 0.75rem;
 }
 
 .site-utilities a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   text-decoration: none;
 }
 
