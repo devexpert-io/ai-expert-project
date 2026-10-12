@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `orders-detail` con `feature-spec`
+- Siguiente paso: planificar `order-access-control` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `orders-list` aceptada por validator independiente (2026-10-12); gate258 tests y QA390×844/1280×800.
+- Última verificación: `orders-detail` aceptada por validator independiente (2026-10-12); gate274 tests y QA390×844/1280×800.
 
 ## Registro de sesión
 
@@ -465,3 +465,27 @@
 - Validator: **ACCEPT** tras reparar targets44px de todo el header. Gate258 tests; focal6 tests/diff-check OK, capturas390/1280 revisadas.
 - Validó aislamiento por propietario, select mínimo, estados desconocidos omitidos, vacío en navegador e invitado307→checkout.
 - Estado:`accepted`. Siguiente:`orders-detail`.
+
+### Sesión 023 — `orders-detail`
+
+- Fecha: 2026-10-12
+- Objetivo: permitir que una persona autenticada abra `/orders/[id]` y vea el estado, fecha, total y líneas históricas de su pedido, con el mismo `404` para pedidos ajenos o inexistentes.
+- Completado:
+  - Añadido `src/lib/server/order-detail.ts` con `findFirst` owner-scoped (`id` + `userId`), select explícito de snapshots `OrderLine`, orden estable y validación cerrada de estados, textos, enteros seguros, subtotales y suma contra `Order.totalCents`; no toca catálogo ni schema.
+  - Añadido `/orders/[id]` con guardia de sesión antes de Prisma, `notFound()` seguro, estado/fecha/total, lista semántica de líneas, total derivado y «Volver a Mis pedidos»; estilos responsive/foco en `orders-detail-page.module.css`.
+  - Añadidos enlaces «Ver detalle del pedido» en `/orders` sin imprimir IDs; tests de servicio/ruta/listado y documentación durable actualizada.
+- Verificación ejecutada y evidencia:
+  - Prueba focal `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec vitest run src/lib/server/order-detail.test.ts 'src/app/orders/[id]/page.test.tsx' src/lib/server/orders.test.ts src/app/orders/page.test.tsx` → 4 archivos/22 tests passing.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3; DB setup/verify, lint, typecheck, 41 archivos/274 tests y build con `/orders/[id]`. Log: `/tmp/ai-expert-orders-detail-gate-20261012.log`.
+  - `git diff --check` → exit 0; `feature_list.json` válido con 19 IDs únicos; SHA base de trabajo `4930929a074a8c34349843d47da726149dfe6449`.
+  - SQLite temporal `/tmp/ai-expert-orders-detail-20261012.db`: dos usuarios/sesiones, cuatro pedidos `PAID`/`CANCELLED`/`PENDING_PAYMENT`; tras mutar Product/Variant el usuario A conservó snapshots antiguos, B quedó aislado, invitado redirigió `307 → /checkout` y A obtuvo `404` idéntico para pedido ajeno e inexistente. Servidor/DB temporales detenidos y eliminables de forma recuperable.
+  - QA Chrome DevTools MCP en `http://localhost:4582`: flujo lista → detalle → lista, cookie `auth_session` de A, emulación exacta `390x844x1,mobile,touch` y `1280x800`; ambos `scrollWidth === clientWidth`, anchors de header/retorno con `minHeight=44px`, foco visible 3px, consola solo info React DevTools y red GET/CSS/chunks/icon 200. Capturas revisadas: `/tmp/orders-detail-390.png`, `/tmp/orders-detail-1280.png`; servidor propio detenido.
+- Estado: `orders-detail` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo o cuestión no resuelta: los avisos conocidos de pnpm/Prisma (scripts ignorados/deprecación de configuración) permanecen sin impacto; no existe E2E persistente, por lo que el flujo navegable queda cubierto por Vitest, smoke HTTP y Chrome DevTools.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `orders-detail`.
+
+### Aceptación independiente — `orders-detail`
+
+- Validator: **ACCEPT**;22 tests focales, lint/typecheck/diff-check OK. Gate274 tests y capturas390/1280 revisadas.
+- Confirmó snapshots, consulta id+userId, sesión antes de servicio, 404 común y suma segura; sin findings de seguridad/alcance/docs.
+- Estado:`accepted`. Siguiente:`order-access-control`.

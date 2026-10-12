@@ -431,13 +431,23 @@
     "depends_on": [
       "orders-list"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "El detalle de pedido muestra las líneas (variante, cantidad, precio) y el estado.",
       "El total del pedido coincide con las líneas."
     ],
-    "evidence": [],
-    "notes": "Entidad Pedido y LineaPedido en domain-model.md."
+    "evidence": [
+      "Implementados src/lib/server/order-detail.ts y src/app/orders/[id]/page.tsx: sesión auth_session resuelta antes del servicio, findFirst owner-scoped con where { id, userId }, select mínimo de status/totalCents/createdAt y snapshots OrderLine, sin Product/Variant/PII/IDs visibles; estados cerrados, texto snapshot, enteros seguros, subtotal derivado y suma coherente devuelven el detalle o null/404 seguro.",
+      "Añadidos src/lib/server/order-detail.test.ts y src/app/orders/[id]/page.test.tsx; actualizado /orders con enlaces opacos 'Ver detalle del pedido', tests de owner/guardia/404 común, snapshots históricos, estados PAID/CANCELLED/PENDING_PAYMENT, formato EUR/Madrid, líneas y regreso.",
+      "Prueba focal PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec vitest run src/lib/server/order-detail.test.ts 'src/app/orders/[id]/page.test.tsx' src/lib/server/orders.test.ts src/app/orders/page.test.tsx -> 4 archivos/22 tests passing; lint y typecheck passing.",
+      "Gate PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh -> exit 0 con Node v22.23.2/pnpm 10.18.3, db:setup/db:verify, lint, typecheck, 41 archivos/274 tests y build con /orders/[id]. Log: /tmp/ai-expert-orders-detail-gate-20261012.log.",
+      "git diff --check -> exit 0; feature_list.json válido con 19 IDs únicos; SHA base de trabajo 4930929a074a8c34349843d47da726149dfe6449.",
+      "SQLite temporal /tmp/ai-expert-orders-detail-20261012.db con dos usuarios/sesiones y cuatro pedidos en PAID/CANCELLED/PENDING_PAYMENT: A conservó productName/unitPriceCents históricos después de mutar Product/Variant, B quedó aislado; invitado recibió 307 -> /checkout y sesión A recibió 404 idéntico para order-b-paid y no-such-order. DB temporal recuperable tras la prueba.",
+      "QA Chrome DevTools MCP en http://localhost:4582: lista -> /orders/order-a-paid -> /orders, sesión A por cookie HTTP-only, emulación exacta 390x844x1,mobile,touch y 1280x800; scrollWidth=clientWidth (390/1280), anchors de retorno/header con minHeight=44px, foco visible 3px, estado/fecha/línea/precio/total visibles, consola solo info React DevTools y red GET/CSS/chunks/icon 200. Capturas revisadas: /tmp/orders-detail-390.png y /tmp/orders-detail-1280.png; servidor propio detenido.",
+      "Documentación durable actualizada en ARCHITECTURE.md, CONSTRAINTS.md, docs/domain-model.md y docs/technical-discovery.md.",
+      "2026-10-12: validator independiente ACCEPT. Repitió22 tests focales/lint/typecheck/diff-check; revisó gate274 tests y capturas390/1280, query id+userId/selectsnapshots, sesión antes de servicio/404común y aritmética segura. Sin findings de alcance, seguridad ni documentación."
+    ],
+    "notes": "Aceptada por validator independiente el 2026-10-12; detalle histórico de pedidos propios."
   },
   {
     "id": "order-access-control",

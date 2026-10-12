@@ -106,6 +106,12 @@ export default async function OrdersPage() {
                         <dd>{dateFormatter.format(order.createdAt)}</dd>
                       </div>
                     </dl>
+                    <Link
+                      className={styles.detailLink}
+                      href={`/orders/${order.id}`}
+                    >
+                      Ver detalle del pedido
+                    </Link>
                   </article>
                 </li>
               );

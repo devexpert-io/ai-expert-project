@@ -49,7 +49,8 @@ Foto usuario + Producto/Variante ──> Imagen try-on
 5. **Chatbot**: el usuario pregunta; el sistema responde usando contexto del catálogo y puede recomendar una variante/producto.
 6. **Try-on**: el usuario sube una foto en el detalle; el sistema genera la prenda puesta sobre la foto y devuelve la imagen.
 7. **Cuenta en checkout**: invitado con borrador y carrito se registra o inicia sesión; el carrito se asocia/fusiona, el token invitado se revoca y las siguientes lecturas usan `userId`.
-8. **Historial de pedidos**: una sesión válida abre «Mis pedidos» y recibe solo sus pedidos, ordenados del más reciente al más antiguo, con estado, total y fecha; el detalle queda para otra feature.
+8. **Historial de pedidos**: una sesión válida abre «Mis pedidos» y recibe solo sus pedidos, ordenados del más reciente al más antiguo, con estado, total y fecha; cada tarjeta enlaza al detalle owner-scoped.
+9. **Detalle histórico**: `/orders/[id]` muestra solo el pedido del usuario autenticado, sus líneas snapshot (`productName`, `size`, `color`, `quantity`, `unitPriceCents`), subtotales derivados, fecha, estado y total persistido. No relee el catálogo; un pedido ajeno/inexistente o inconsistente termina en el mismo `404`.
 
 ## Edge Cases
 

@@ -123,8 +123,15 @@ cookie o con una sesión inválida redirige a `/checkout` antes de consultar
 orden estable `createdAt DESC, id DESC` y un `select` mínimo de `id`, `status`,
 `totalCents` y `createdAt`. La página traduce solo `PAID`, `CANCELLED` y
 `PENDING_PAYMENT`, omite estados desconocidos y entrega una vista sin líneas,
-identificadores visibles, `userId` ni PII; no existe API pública ni enlace de
-detalle en este slice.
+identificadores visibles, `userId` ni PII. Cada tarjeta enlaza a
+`/orders/[id]`, que vuelve a exigir la sesión antes de usar
+`src/lib/server/order-detail.ts`. El detalle hace un `findFirst` owner-scoped
+con `where: { id, userId }` y selecciona solo `status`, `totalCents`, `createdAt`
+y los cinco campos históricos de cada `OrderLine` (`productName`, `size`,
+`color`, `quantity`, `unitPriceCents`), ordenados por creación e ID. No consulta
+`Product`/`Variant` ni relaciones de usuario: calcula `lineTotalCents` y la suma
+con enteros seguros, traduce el mapa cerrado de estados y responde con `404`
+seguro si el pedido es ajeno/inexistente o sus snapshots no son coherentes.
 
 ## Decisions
 
