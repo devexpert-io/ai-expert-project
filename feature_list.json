@@ -287,7 +287,7 @@
       "git diff --check -> exit 0; revisión estática confirma ausencia de localStorage, token en JSON, secretos, mutación de stock, auth, checkout y cambios de schema/seed/dependencias.",
       "2026-10-12: validación independiente feature-validator accept tras reparación Int32; 42 tests focalizados, gate 169 tests, overflow concurrente 200/400 sin mutación indebida, QA 390x844/1280x800."
     ],
-    "notes": "Implementada y auto-verificada; queda lista para feature-validator, que debe decidir la aceptación independiente. Quantity está acotada a 1..2_147_483_647 (Int32) y el overflow inicial o acumulado devuelve 400 sin mutar el carrito. El carrito persiste para invitados en SQLite mediante cookie HTTP-only; no reserva ni descuenta stock y checkout debe revalidarlo."
+    "notes": "Aceptada por validator independiente el 2026-10-12 (commit a29a2df). Quantity está acotada a 1..2_147_483_647 (Int32) y el overflow inicial o acumulado devuelve 400 sin mutar el carrito. El carrito persiste para invitados en SQLite mediante cookie HTTP-only; no reserva ni descuenta stock y checkout debe revalidarlo."
   },
   {
     "id": "cart-manage",
@@ -457,12 +457,23 @@
     "depends_on": [
       "orders-list"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Un invitado que intenta ver pedidos es bloqueado o redirigido al checkout.",
       "Un usuario no puede acceder a pedidos de otro usuario."
     ],
-    "evidence": [],
-    "notes": "Los pedidos solo existen para usuarios creados en checkout (build-brief.md, technical-discovery.md). Edge case: crear pedido sin sesión bloqueado."
+    "evidence": [
+      "Añadidas regresiones en src/lib/server/auth.test.ts: lookup por SHA-256 sin token crudo, expiresAt exactamente inclusivo (<= now) y revocación por hash seguida de lookup nulo.",
+      "Ampliado src/app/api/checkout/payment/route.test.ts: cookie ausente/desconocida/caducada/revocada devuelven 401 con no-store sin processPayment; body con userId extra devuelve 400 antes del servicio.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec vitest run src/lib/server/auth.test.ts src/app/api/checkout/payment/route.test.ts -> exit 0 (2 archivos, 14 tests).",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec node scripts/verify-order-access-control.mjs -> exit 0: SQLite temporal /tmp/verify-order-access-control-mTerqe/orders.db, next start propio, A/B, guest/unknown/expired/revoked, owner list/detail, foreign+missing 404, query userId, RSC cookie switch, invalid payment sin creación, pago válido único, logout/token antiguo y private/no-store; cleanup recuperable con trash verificado.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh -> exit 0 con Node v22.23.2/pnpm 10.18.3; db:setup/db:verify, lint, typecheck, 41 archivos/279 tests y build con /orders, /orders/[id] y /api/checkout/payment.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH node --check scripts/verify-order-access-control.mjs y git diff --check -> exit 0; no hay schema, migración, dependencia ni código de producción nuevo.",
+      "UI de pedidos/auth sin cambios; el smoke HTTP/RSC contra el build propio cubre redirección, aislamiento, 404 y cambio de cookie.",
+      "QA Chrome DevTools MCP en http://localhost:4597 con servidor/DB propios: emulación exacta 390x844x1,mobile,touch y 1280x800; invitado 307->/checkout; A solo vio lista/detalle propios; foreign/missing no mostraron detalle; logout+recarga con token antiguo redirigió a checkout; cambio a B mostró solo pedidos de B; sin overflow, errores de consola ni respuestas 5xx. Capturas revisadas: /tmp/order-access-control-qa-390-list.png, /tmp/order-access-control-qa-390-detail.png, /tmp/order-access-control-qa-1280-list.png, /tmp/order-access-control-qa-1280-detail.png. Servidor propio detenido y DB/driver temporales movidos a Trash.",
+      "2026-10-12: implementación auto-verificada y lista para feature-validator; aún no aceptada.",
+      "2026-10-12: validator independiente ACCEPT definitivo;22 tests focales, lint/typecheck/node --check/diff-check OK. Repitió smoke SQLite/next start propio en /tmp/verify-order-access-control-WCTzAb/orders.db: sesiones inválidas, aislamiento A/B,404común, userIdinyectado, pagoúnico, logout y private/no-store; cleanupTrash y proceso terminado confirmados. Revisó4 capturas390/1280 y gate279 tests/build; sin findings."
+    ],
+    "notes": "Aceptada por validator independiente el 2026-10-12; guardias existentes cubiertas por regresiones y smoke adversarial reproducible."
   }
 ]
