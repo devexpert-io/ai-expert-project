@@ -297,14 +297,23 @@
     "depends_on": [
       "cart-add"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "La página de carrito lista los ítems con variante, precio y cantidad.",
       "Ajustar la cantidad y eliminar ítems actualiza el total.",
       "El total del carrito es correcto."
     ],
-    "evidence": [],
-    "notes": "Las cantidades se revalidan contra stock en el checkout (edge case en domain-model.md)."
+    "evidence": [
+      "Implementados CartView y parsers cerrados en src/lib/cart.ts; lectura server-only y mutaciones transaccionales en src/lib/server/cart.ts; PATCH/DELETE /api/cart/items exigen cookie existente, devuelven snapshot no-store y nunca emiten Set-Cookie.",
+      "Creada /cart como Server Component dinámico con líneas de variante, producto enlazable, talla/color, precio unitario, cantidad, subtotal de línea, itemCount y subtotalCents; CartItemControls cliente actualiza/elimina con credentials same-origin, estados accesibles y router.refresh(). Header global incluye enlace Carrito.",
+      "CI=true ./init.sh -> exit 0 con Node v22.23.2/pnpm 10.18.3; db:setup + db:verify, lint, typecheck, 26 archivos y 202 tests, build con /cart. Log: /tmp/ai-expert-cart-manage-gate-20261012.log.",
+      "Tests focalizados cubren parser cerrado y límites Int32, snapshot exacto desde Variant.priceCents, sumas/overflow seguro, cookie y Origin, PATCH/DELETE 200/400/404/500, no creación de Cart/cookie, estado vacío, controles accesibles y no regresión POST.",
+      "Smoke API en http://localhost:4347 con browser aislado: POST 200 creó dos líneas; PATCH 200 quantity 2->5 devolvió lineTotalCents 9950/subtotalCents 9950; DELETE 200 dejó snapshot vacío; DELETE ausente 404 y PATCH quantity=0 400; todas no-store y sin Set-Cookie visible.",
+      "Smoke UI en http://localhost:4347/cart: 390x844 y 1280x800; navegación global Carrito visible, dos líneas cargadas, actualización a 5 recalculó 120,40 €, eliminación dejó una línea y subtotal 20,90 €, scrollWidth igual al viewport; capturas /tmp/cart-manage-390.png y /tmp/cart-manage-1280.png.",
+      "Navegación normal mostró solo el mensaje informativo de React DevTools, sin errores ni peticiones fallidas; git diff --check -> exit 0; no se tocaron schema/seed/dependencias, checkout, auth ni stock.",
+      "2026-10-12: feature-validator independiente accept: 67 tests focalizados, gate 202 tests inspeccionado, smoke real DB temporal de lectura/PATCH/DELETE/totales y QA390x844/1280x800; claves JSON únicas verificadas."
+    ],
+    "notes": "Aceptada por validator independiente. La página conserva la intención aunque cambie el stock; checkout debe revalidarlo."
   },
   {
     "id": "checkout-review",

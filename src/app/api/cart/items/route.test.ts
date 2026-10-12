@@ -3,16 +3,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const cookieStore = vi.hoisted(() => ({ get: vi.fn() }));
 const cookiesMock = vi.hoisted(() => vi.fn());
 const addGuestCartItem = vi.hoisted(() => vi.fn());
+const updateGuestCartItem = vi.hoisted(() => vi.fn());
+const removeGuestCartItem = vi.hoisted(() => vi.fn());
 
 vi.mock("next/headers", () => ({ cookies: cookiesMock }));
-vi.mock("../../../../lib/server/cart", () => ({ addGuestCartItem }));
+vi.mock("../../../../lib/server/cart", () => ({
+  addGuestCartItem,
+  updateGuestCartItem,
+  removeGuestCartItem,
+}));
 
-import { POST } from "./route";
+import { DELETE, PATCH, POST } from "./route";
 import { CART_QUANTITY_MAX } from "../../../../lib/cart";
 
 function request(
   body: unknown,
   options: Readonly<{
+    method?: "POST" | "PATCH" | "DELETE";
     origin?: string;
     contentType?: string;
     rawBody?: string;
@@ -29,7 +36,7 @@ function request(
   }
 
   return new Request("http://localhost:3000/api/cart/items", {
-    method: "POST",
+    method: options.method ?? "POST",
     headers,
     body: options.rawBody ?? JSON.stringify(body),
   });
@@ -44,6 +51,14 @@ describe("POST /api/cart/items", () => {
       ok: true,
       item: { variantId: "variant-s-black", quantity: 2 },
       itemCount: 2,
+    });
+    updateGuestCartItem.mockResolvedValue({
+      ok: true,
+      cart: { items: [], itemCount: 0, subtotalCents: 0 },
+    });
+    removeGuestCartItem.mockResolvedValue({
+      ok: true,
+      cart: { items: [], itemCount: 0, subtotalCents: 0 },
     });
   });
 
@@ -180,6 +195,122 @@ describe("POST /api/cart/items", () => {
     await expect(response.json()).resolves.toEqual({
       ok: false,
       message: "El carrito no está disponible temporalmente. Inténtalo de nuevo.",
+    });
+  });
+
+  it("updates a line through PATCH using an existing cookie without Set-Cookie", async () => {
+    cookieStore.get.mockReturnValue({ value: "existing-guest-token" });
+    updateGuestCartItem.mockResolvedValueOnce({
+      ok: true,
+      cart: {
+        items: [
+          {
+            variantId: "variant-s-black",
+            productSlug: "camiseta-basica",
+            productName: "Camiseta básica",
+            imageUrl: "https://placehold.co/camiseta.png",
+            size: "S",
+            color: "Negro",
+            unitPriceCents: 1990,
+            quantity: 5,
+            lineTotalCents: 9950,
+          },
+        ],
+        itemCount: 5,
+        subtotalCents: 9950,
+      },
+    });
+
+    const response = await PATCH(
+      request(
+        { variantId: "variant-s-black", quantity: 5 },
+        { method: "PATCH" },
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Set-Cookie")).toBeNull();
+    expect(updateGuestCartItem).toHaveBeenCalledWith({
+      guestToken: "existing-guest-token",
+      variantId: "variant-s-black",
+      quantity: 5,
+    });
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      cart: { itemCount: 5, subtotalCents: 9950 },
+    });
+  });
+
+  it("deletes a line through DELETE and maps a missing line to 404", async () => {
+    cookieStore.get.mockReturnValue({ value: "existing-guest-token" });
+    removeGuestCartItem.mockResolvedValueOnce({
+      ok: false,
+      code: "cart_item_not_found",
+    });
+
+    const response = await DELETE(
+      request({ variantId: "missing" }, { method: "DELETE" }),
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      message: "La línea del carrito no existe.",
+    });
+    expect(removeGuestCartItem).toHaveBeenCalledWith({
+      guestToken: "existing-guest-token",
+      variantId: "missing",
+    });
+  });
+
+  it.each([
+    [{ variantId: "variant-s-black", quantity: 0 }, "PATCH"],
+    [{ variantId: "variant-s-black", quantity: 1, extra: true }, "PATCH"],
+    [{ variantId: "variant-s-black", extra: true }, "DELETE"],
+  ])("rejects invalid %s mutation before service", async (body, method) => {
+    const response =
+      method === "PATCH"
+        ? await PATCH(request(body, { method: "PATCH" }))
+        : await DELETE(request(body, { method: "DELETE" }));
+
+    expect(response.status).toBe(400);
+    expect(updateGuestCartItem).not.toHaveBeenCalled();
+    expect(removeGuestCartItem).not.toHaveBeenCalled();
+  });
+
+  it("does not create a cookie or call the service when no guest cookie exists", async () => {
+    cookieStore.get.mockReturnValue(undefined);
+    const response = await PATCH(
+      request(
+        { variantId: "variant-s-black", quantity: 2 },
+        { method: "PATCH" },
+      ),
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Set-Cookie")).toBeNull();
+    expect(updateGuestCartItem).not.toHaveBeenCalled();
+  });
+
+  it("maps update overflow to 400 without exposing service details", async () => {
+    cookieStore.get.mockReturnValue({ value: "existing-guest-token" });
+    updateGuestCartItem.mockResolvedValueOnce({
+      ok: false,
+      code: "quantity_overflow",
+    });
+
+    const response = await PATCH(
+      request(
+        { variantId: "variant-s-black", quantity: 2 },
+        { method: "PATCH" },
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      message: "Revisa la variante y la cantidad e inténtalo de nuevo.",
     });
   });
 });

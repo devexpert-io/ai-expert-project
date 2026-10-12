@@ -1,0 +1,239 @@
+.page {
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 40px var(--page-gutter) 96px;
+}
+
+.header {
+  max-width: 44rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 30px;
+}
+
+.eyebrow,
+.itemCategory,
+.summaryEyebrow {
+  margin: 0;
+  color: var(--color-accent-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 8ch;
+  margin: 15px 0 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(3.2rem, 12vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+}
+
+.intro {
+  max-width: 32rem;
+  margin: 24px 0 0;
+  color: var(--color-secondary);
+  font-size: 1rem;
+}
+
+.empty {
+  max-width: 34rem;
+  margin-top: 42px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 30px;
+}
+
+.empty h2,
+.sectionHeading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.empty p {
+  margin: 10px 0 22px;
+  color: var(--color-secondary);
+}
+
+.catalogLink,
+.productLink,
+.itemHeading h3 a {
+  text-decoration: none;
+}
+
+.catalogLink {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #fffaf2;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 10px 17px;
+}
+
+.catalogLink:hover {
+  background: var(--color-accent-dark);
+}
+
+.layout {
+  display: grid;
+  gap: 44px;
+  margin-top: 36px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
+.sectionHeading p {
+  margin: 0;
+  color: var(--color-secondary);
+  font-size: 0.78rem;
+}
+
+.items {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(112px, 30vw) minmax(0, 1fr);
+  gap: 18px;
+  border-top: 1px solid var(--color-border);
+  padding: 22px 0;
+}
+
+.imageFrame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e6dfd4;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.itemDetails {
+  min-width: 0;
+}
+
+.itemHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.itemHeading h3 {
+  margin: 5px 0 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.itemHeading h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.lineTotal {
+  flex: 0 0 auto;
+  margin: 5px 0 0;
+  font-family: var(--font-editorial);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.variantDescription {
+  margin: 13px 0 0;
+  color: var(--color-secondary);
+  font-size: 0.8rem;
+}
+
+.summary {
+  align-self: start;
+  border-top: 3px solid var(--color-primary);
+  background: var(--color-surface);
+  padding: 22px;
+}
+
+.summary dl {
+  margin: 20px 0 0;
+}
+
+.summary dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 12px 0;
+}
+
+.summary dt,
+.summary dd {
+  margin: 0;
+}
+
+.summary dt {
+  color: var(--color-secondary);
+  font-size: 0.82rem;
+}
+
+.summary dd {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.summaryTotal dt,
+.summaryTotal dd {
+  color: var(--color-primary);
+  font-family: var(--font-editorial);
+  font-size: 1.35rem;
+}
+
+.summaryNote {
+  margin: 17px 0 0;
+  color: var(--color-secondary);
+  font-size: 0.72rem;
+}
+
+.catalogLink:focus-visible,
+.productLink:focus-visible,
+.itemHeading h3 a:focus-visible {
+  outline: 3px solid #c4714e;
+  outline-offset: 3px;
+}
+
+@media (min-width: 700px) {
+  .page {
+    padding-top: 52px;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+    align-items: start;
+    gap: clamp(48px, 8vw, 120px);
+  }
+
+  .item {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 28px;
+  }
+}

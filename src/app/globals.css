@@ -88,8 +88,8 @@ img {
 .site-utilities {
   display: flex;
   justify-self: end;
-  gap: 24px;
-  font-size: 0.8rem;
+  gap: 12px;
+  font-size: 0.75rem;
 }
 
 .site-utilities a {
@@ -199,6 +199,8 @@ img {
 
   .site-utilities {
     justify-self: end;
+    gap: 24px;
+    font-size: 0.8rem;
   }
 
   .catalog-header {
