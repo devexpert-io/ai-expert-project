@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `checkout-review` con `feature-spec`
+- Siguiente paso: planificar `checkout-user` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `cart-manage` aceptada por validator independiente (2026-10-12); gate completo 202 tests y navegador390×844/1280×800.
+- Última verificación: `checkout-review` aceptada por validator independiente (2026-10-12); gate217 tests y navegador390×844/1280×800.
 
 ## Registro de sesión
 
@@ -346,3 +346,30 @@
 - Fecha:2026-10-12. Validator:`accept`; 67 tests focalizados, gate202 tests y QA390×844/1280×800 verificados.
 - Smoke aislado localhost:4348: vacío sin cookie, dos líneas60,70€, PATCH120,40€, DELETE y errores400/404; no-store/sin Set-Cookie. JSON con claves únicas.
 - Estado:accepted. Siguiente:`checkout-review`.
+
+### Sesión 019 — `checkout-review`
+
+- Fecha: 2026-10-12
+- Objetivo: crear `/checkout` para que un invitado revise su `CartView` y guarde un borrador efímero de contacto/envío antes de cuenta y pago.
+- Completado:
+  - `src/lib/checkout.ts`: contrato cerrado `checkout_draft_v1`, normalización, límites, validación de cuatro campos y parser/serializador que rechazan JSON manipulado o campos extra.
+  - `src/app/checkout/page.tsx` + estilos: lectura server-side por `cart_guest_token`, resumen desde `getGuestCart`/`Variant.priceCents`, vacío seguro sin cookie/líneas y formulario solo con líneas.
+  - `src/components/checkout/CheckoutForm.tsx` + estilos: required, `autocomplete`, errores en español con `aria-describedby`, status/alert, rehidratación y escritura exclusiva en `sessionStorage`; guardar no hace red.
+  - `/cart`: CTA «Continuar al checkout» condicionado a líneas; tests de contrato, página, CTA y formulario.
+  - Actualizados `ARCHITECTURE.md`, `CONSTRAINTS.md` y `docs/technical-discovery.md`; sin schema/migración/dependencia nueva ni cuentas, pedidos, pagos o stock.
+- Verificación ejecutada:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/checkout.test.ts src/components/checkout/CheckoutForm.test.tsx src/app/checkout/page.test.tsx src/app/cart/page.test.tsx` → exit 0; 29 archivos y 217 tests.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3; DB setup/verify, lint, typecheck, 217 tests y build con `/checkout`. Log: `/tmp/ai-expert-checkout-review-gate-20261012-final.log`.
+  - `git diff --check` → exit 0; `feature_list.json` válido, 19 IDs únicos y comprobación de claves duplicadas OK.
+  - Smoke browser con helper MCP en servidor propio `http://localhost:4367`: vacío sin cookie no creó carrito/cookie ni formulario; variante seeded CAM-BAS-S-NEGRO quantity=2 → POST 200/itemCount=2; resumen mostró talla S, Negro, 2 unidades, 19,90 €/ud, 39,80 € de línea y subtotal.
+  - QA emulada 390×844/1280×800: móvil apilado y escritorio en dos columnas, `scrollWidth === clientWidth`, consola solo aviso informativo de React DevTools, peticiones 200, roles/labels/required/foco inspeccionados. Capturas: `/tmp/checkout-review-390.png`, `/tmp/checkout-review-1280.png`.
+  - Borrador real: `sessionStorage` contiene solo `checkout_draft_v1` con `name`, `email`, `phone`, `shippingAddress`; guardar anunció `role=status` sin fetch y recarga restauró valores. JSON con campo extra fue rechazado y eliminado.
+- Estado: `checkout-review` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo: el carrito no reserva ni descuenta stock; `checkout-payment` debe revalidar antes de cobrar. Los avisos conocidos de pnpm/Prisma no afectan al gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `checkout-review`.
+
+### Aceptación independiente — `checkout-review`
+
+- Fecha:2026-10-12. Validator:`accept`; 217 tests, lint/typecheck, gate/build y QA390×844/1280×800 verificados.
+- GET aislado localhost:4381 sin cookie mostró vacío200 sin formulario ni Set-Cookie; borrador con cuatro campos, privacidad y parser cerrado comprobados.
+- Estado:accepted. Siguiente:`checkout-user`.

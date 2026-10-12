@@ -323,14 +323,23 @@
     "depends_on": [
       "cart-manage"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "El checkout muestra el resumen del carrito y un formulario de contacto/envío.",
       "El formulario valida los campos obligatorios.",
       "Un invitado puede llegar a esta pantalla sin cuenta."
     ],
-    "evidence": [],
-    "notes": "Flujo en docs/build-brief.md (slice MVP). El invitado llega a la puerta del checkout pero no se materializa pedido hasta crear usuario."
+    "evidence": [
+      "Implementados src/lib/checkout.ts (contrato cerrado checkout_draft_v1, normalización, límites y validación), /checkout server-side desde cart_guest_token/getGuestCart, estado vacío seguro, resumen CartView y CTA condicionado desde /cart; CheckoutForm solo usa sessionStorage y no hace fetch.",
+      "Tests focalizados `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/lib/checkout.test.ts src/components/checkout/CheckoutForm.test.tsx src/app/checkout/page.test.tsx src/app/cart/page.test.tsx` -> exit 0; Vitest ejecutó 29 archivos y 217 tests.",
+      "Gate `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` -> exit 0 con Node v22.23.2/pnpm 10.18.3; db:setup, db:verify, lint, typecheck, 217 tests y build con `/checkout`. Log: /tmp/ai-expert-checkout-review-gate-20261012-final.log.",
+      "Smoke navegador en servidor propio `http://localhost:4367`: vacío sin cookie no consultó/creó carrito y no montó formulario; POST seeded de CAM-BAS-S-NEGRO quantity=2 devolvió 200/itemCount=2; `/checkout` mostró talla S, Negro, 2 unidades, 19,90 € por unidad, 39,80 € de línea y subtotal 39,80 €.",
+      "QA responsive con chrome-devtools MCP: emulación 390x844 y 1280x800 sin overflow (scrollWidth=clientWidth), resumen apilado en móvil y dos columnas en escritorio; labels/required/foco/roles status-alert inspeccionados. Capturas: /tmp/checkout-review-390.png y /tmp/checkout-review-1280.png.",
+      "Flujo de borrador real: sessionStorage contiene exactamente `name`, `email`, `phone`, `shippingAddress` bajo `checkout_draft_v1`; guardar mostró role=status sin petición de red y una recarga restauró los cuatro valores. Consola solo mostró el aviso informativo de React DevTools y las peticiones observadas respondieron 200.",
+      "`git diff --check` -> exit 0; documentación durable actualizada en ARCHITECTURE.md, CONSTRAINTS.md y docs/technical-discovery.md; sin cambios de schema, migración, dependencias, usuarios, pedidos, pagos o stock.",
+      "2026-10-12: feature-validator independiente accept; 217 tests, lint/typecheck/diff-check, gate build y QA390x844/1280x800 verificados; GET aislado sin cookie=vacío200 sin formulario/Set-Cookie, privacidad sessionStorage comprobada."
+    ],
+    "notes": "Aceptada por validator independiente. Borrador de contacto/envío efímero en sessionStorage; cuenta/pago en siguientes features."
   },
   {
     "id": "checkout-user",

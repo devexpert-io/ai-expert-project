@@ -1,0 +1,264 @@
+.page {
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  max-width: 1240px;
+  padding: 40px var(--page-gutter) 96px;
+}
+
+.header {
+  max-width: 44rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 30px;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  margin: 0;
+  color: var(--color-accent-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  max-width: 8ch;
+  margin: 15px 0 0;
+  font-family: var(--font-editorial);
+  font-size: clamp(3.2rem, 12vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+}
+
+.intro {
+  max-width: 32rem;
+  margin: 24px 0 0;
+  color: var(--color-secondary);
+  font-size: 1rem;
+}
+
+.empty {
+  max-width: 38rem;
+  margin-top: 42px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 30px;
+}
+
+.empty h2,
+.details h2,
+.sectionHeading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.empty p {
+  margin: 10px 0 22px;
+  color: var(--color-secondary);
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primaryLink,
+.secondaryLink,
+.editLink,
+.productLink,
+.itemDetails h3 a {
+  text-decoration: none;
+}
+
+.primaryLink,
+.secondaryLink {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  border: 1px solid var(--color-primary);
+  padding: 10px 17px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.primaryLink {
+  background: var(--color-primary);
+  color: #fffaf2;
+}
+
+.secondaryLink {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.primaryLink:hover,
+.secondaryLink:hover {
+  border-color: var(--color-accent-dark);
+  background: var(--color-accent-dark);
+  color: #fffaf2;
+}
+
+.layout {
+  display: grid;
+  gap: 28px;
+  margin-top: 36px;
+}
+
+.summary,
+.details {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 22px;
+}
+
+.summary {
+  border-top: 3px solid var(--color-primary);
+}
+
+.details {
+  border-top: 3px solid var(--color-accent);
+}
+
+.details h2 {
+  margin-top: 5px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sectionHeading h2 {
+  margin-top: 5px;
+}
+
+.editLink {
+  flex: 0 0 auto;
+  color: var(--color-accent-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.editLink:hover,
+.itemDetails h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.items {
+  display: grid;
+  gap: 0;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 14px;
+  border-top: 1px solid var(--color-border);
+  padding: 18px 0;
+}
+
+.imageFrame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e6dfd4;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.itemDetails {
+  min-width: 0;
+}
+
+.itemDetails h3 {
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.itemDetails p {
+  margin: 8px 0 0;
+  color: var(--color-secondary);
+  font-size: 0.8rem;
+}
+
+.itemPrice {
+  color: var(--color-primary) !important;
+  font-weight: 700;
+}
+
+.total {
+  margin: 0;
+}
+
+.total > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid var(--color-border);
+  padding: 12px 0;
+}
+
+.total dt,
+.total dd {
+  margin: 0;
+}
+
+.total dt {
+  color: var(--color-secondary);
+  font-size: 0.82rem;
+}
+
+.total dd {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.totalRow dt,
+.totalRow dd {
+  color: var(--color-primary);
+  font-family: var(--font-editorial);
+  font-size: 1.35rem;
+}
+
+.totalNote {
+  margin: 12px 0 0;
+  color: var(--color-secondary);
+  font-size: 0.72rem;
+}
+
+.primaryLink:focus-visible,
+.secondaryLink:focus-visible,
+.editLink:focus-visible,
+.productLink:focus-visible,
+.itemDetails h3 a:focus-visible {
+  outline: 3px solid #c4714e;
+  outline-offset: 3px;
+}
+
+@media (min-width: 700px) {
+  .page {
+    padding-top: 52px;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.85fr);
+    align-items: start;
+    gap: clamp(28px, 5vw, 72px);
+  }
+}

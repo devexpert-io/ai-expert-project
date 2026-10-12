@@ -113,6 +113,25 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
   checkout. La UI refresca el Server Component tras un éxito y no usa
   `localStorage`.
 
+## Contrato implementado de revisión del checkout (`checkout-review`)
+
+- `/checkout` es un Server Component dinámico. Lee el token existente con
+  `cookies()` y reutiliza `getGuestCart`; no acepta precios, cantidades ni tokens
+  del cliente. Sin cookie, carrito asociado o líneas muestra un vacío accesible
+  con enlaces a carrito/catálogo y no crea filas, cookies ni formulario.
+- Con líneas, el resumen muestra producto, talla, color, cantidad, precio unitario,
+  subtotal de línea, unidades y subtotal EUR a partir de `CartView`. El CTA
+  `Continuar al checkout` solo aparece en `/cart` cuando hay líneas.
+- `CheckoutForm` es la única isla cliente de este slice. Sus cuatro campos
+  obligatorios (`name`, `email`, `phone`, `shippingAddress`) se normalizan y
+  validan con contrato cerrado y límites seguros. El borrador exacto vive solo
+  como JSON en `sessionStorage["checkout_draft_v1"]` durante la pestaña; se
+  rehidrata tras recarga solo si `parseCheckoutDraft` rechaza campos extra,
+  valores inválidos o JSON manipulado. Guardar no hace peticiones de red.
+- Este slice no crea usuarios/sesiones, pedidos, pagos ni reservas de stock. El
+  borrador queda como contrato de entrada para `checkout-user`; la revalidación de
+  disponibilidad pertenece a `checkout-payment`.
+
 ## Observability
 
 - Logs claros en el flujo de pago y de los errores de las APIs de IA (sin exponer claves).
