@@ -22,28 +22,19 @@ export type CartMutationFailure = Readonly<{
     | "cart_item_not_found";
 }>;
 
-export type AddGuestCartItemResult = CartAddSuccess | CartMutationFailure;
-export type UpdateGuestCartItemResult =
-  | CartMutationSuccess
-  | CartMutationFailure;
-export type RemoveGuestCartItemResult =
-  | CartMutationSuccess
-  | CartMutationFailure;
+export type AddCartItemResult = CartAddSuccess | CartMutationFailure;
+export type UpdateCartItemResult = CartMutationSuccess | CartMutationFailure;
+export type RemoveCartItemResult = CartMutationSuccess | CartMutationFailure;
+export type AddGuestCartItemResult = AddCartItemResult;
+export type UpdateGuestCartItemResult = UpdateCartItemResult;
+export type RemoveGuestCartItemResult = RemoveCartItemResult;
+export type AddUserCartItemResult = AddCartItemResult;
+export type UpdateUserCartItemResult = UpdateCartItemResult;
+export type RemoveUserCartItemResult = RemoveCartItemResult;
 
-type AddGuestCartItemArgs = CartAddInput &
-  Readonly<{
-    guestToken: string;
-  }>;
-
-type UpdateGuestCartItemArgs = CartUpdateInput &
-  Readonly<{
-    guestToken: string;
-  }>;
-
-type RemoveGuestCartItemArgs = CartRemoveInput &
-  Readonly<{
-    guestToken: string;
-  }>;
+export type CartOwner =
+  | Readonly<{ guestToken: string }>
+  | Readonly<{ userId: string }>;
 
 type CartItemRecord = Readonly<{
   variantId: string;
@@ -82,6 +73,18 @@ const cartItemSelect = {
     },
   },
 } satisfies Prisma.CartItemSelect;
+
+function ownerWhere(owner: CartOwner): { guestToken: string } | { userId: string } {
+  return "guestToken" in owner
+    ? { guestToken: owner.guestToken }
+    : { userId: owner.userId };
+}
+
+function ownerCreate(owner: CartOwner): { guestToken: string } | { userId: string } {
+  return "guestToken" in owner
+    ? { guestToken: owner.guestToken }
+    : { userId: owner.userId };
+}
 
 function addSafeIntegers(left: number, right: number): number {
   const result = left + right;
@@ -128,12 +131,12 @@ function buildCartView(items: readonly CartItemRecord[]): CartView {
   return { items: viewItems, itemCount, subtotalCents };
 }
 
-async function readGuestCartFrom(
+async function readCartFrom(
   client: CartReader,
-  guestToken: string,
+  owner: CartOwner,
 ): Promise<CartView> {
   const cart = await client.cart.findUnique({
-    where: { guestToken },
+    where: ownerWhere(owner),
     select: {
       items: {
         orderBy: { id: "asc" },
@@ -149,28 +152,39 @@ async function readGuestCartFrom(
   return buildCartView(cart.items as readonly CartItemRecord[]);
 }
 
-/** Reads the guest snapshot without creating a cart or cookie. */
-export async function getGuestCart(guestToken: string): Promise<CartView> {
-  if (!guestToken) {
-    throw new Error("guestToken is required");
+export async function getCartForOwner(owner: CartOwner): Promise<CartView> {
+  if (
+    ("guestToken" in owner && !owner.guestToken) ||
+    ("userId" in owner && !owner.userId)
+  ) {
+    throw new Error("cart owner is required");
   }
 
-  return readGuestCartFrom(prisma, guestToken);
+  return readCartFrom(prisma, owner);
 }
 
-/**
- * Adds an item for an anonymous cart in one SQLite transaction.
- *
- * Stock is checked at add time, but is deliberately not reserved or
- * decremented. Checkout owns the later, authoritative stock revalidation.
- */
-export async function addGuestCartItem({
-  guestToken,
+export async function getGuestCart(guestToken: string): Promise<CartView> {
+  return getCartForOwner({ guestToken });
+}
+
+export async function getUserCart(userId: string): Promise<CartView> {
+  return getCartForOwner({ userId });
+}
+
+type AddCartItemArgs = CartAddInput & Readonly<{ owner: CartOwner }>;
+type UpdateCartItemArgs = CartUpdateInput & Readonly<{ owner: CartOwner }>;
+type RemoveCartItemArgs = CartRemoveInput & Readonly<{ owner: CartOwner }>;
+
+export async function addCartItem({
+  owner,
   variantId,
   quantity,
-}: AddGuestCartItemArgs): Promise<AddGuestCartItemResult> {
-  if (!guestToken) {
-    throw new Error("guestToken is required");
+}: AddCartItemArgs): Promise<AddCartItemResult> {
+  if (
+    ("guestToken" in owner && !owner.guestToken) ||
+    ("userId" in owner && !owner.userId)
+  ) {
+    throw new Error("cart owner is required");
   }
 
   if (
@@ -196,7 +210,7 @@ export async function addGuestCartItem({
     }
 
     const existingCart = await transaction.cart.findUnique({
-      where: { guestToken },
+      where: ownerWhere(owner),
       select: { id: true },
     });
 
@@ -222,8 +236,8 @@ export async function addGuestCartItem({
     const cart =
       existingCart ??
       (await transaction.cart.upsert({
-        where: { guestToken },
-        create: { guestToken },
+        where: ownerWhere(owner),
+        create: ownerCreate(owner),
         update: {},
         select: { id: true },
       }));
@@ -262,14 +276,16 @@ export async function addGuestCartItem({
   });
 }
 
-/** Replaces one existing guest-cart line quantity without checking stock. */
-export async function updateGuestCartItem({
-  guestToken,
+export async function updateCartItem({
+  owner,
   variantId,
   quantity,
-}: UpdateGuestCartItemArgs): Promise<UpdateGuestCartItemResult> {
-  if (!guestToken) {
-    throw new Error("guestToken is required");
+}: UpdateCartItemArgs): Promise<UpdateCartItemResult> {
+  if (
+    ("guestToken" in owner && !owner.guestToken) ||
+    ("userId" in owner && !owner.userId)
+  ) {
+    throw new Error("cart owner is required");
   }
 
   if (
@@ -282,7 +298,7 @@ export async function updateGuestCartItem({
 
   return prisma.$transaction(async (transaction) => {
     const cart = await transaction.cart.findUnique({
-      where: { guestToken },
+      where: ownerWhere(owner),
       select: { id: true },
     });
     if (!cart) {
@@ -304,23 +320,25 @@ export async function updateGuestCartItem({
 
     return {
       ok: true,
-      cart: await readGuestCartFrom(transaction, guestToken),
+      cart: await readCartFrom(transaction, owner),
     } satisfies CartMutationSuccess;
   });
 }
 
-/** Removes one existing guest-cart line and preserves an empty Cart row. */
-export async function removeGuestCartItem({
-  guestToken,
+export async function removeCartItem({
+  owner,
   variantId,
-}: RemoveGuestCartItemArgs): Promise<RemoveGuestCartItemResult> {
-  if (!guestToken) {
-    throw new Error("guestToken is required");
+}: RemoveCartItemArgs): Promise<RemoveCartItemResult> {
+  if (
+    ("guestToken" in owner && !owner.guestToken) ||
+    ("userId" in owner && !owner.userId)
+  ) {
+    throw new Error("cart owner is required");
   }
 
   return prisma.$transaction(async (transaction) => {
     const cart = await transaction.cart.findUnique({
-      where: { guestToken },
+      where: ownerWhere(owner),
       select: { id: true },
     });
     if (!cart) {
@@ -339,7 +357,43 @@ export async function removeGuestCartItem({
 
     return {
       ok: true,
-      cart: await readGuestCartFrom(transaction, guestToken),
+      cart: await readCartFrom(transaction, owner),
     } satisfies CartMutationSuccess;
   });
+}
+
+export function addGuestCartItem(
+  args: CartAddInput & Readonly<{ guestToken: string }>,
+): Promise<AddGuestCartItemResult> {
+  return addCartItem({ owner: { guestToken: args.guestToken }, ...args });
+}
+
+export function updateGuestCartItem(
+  args: CartUpdateInput & Readonly<{ guestToken: string }>,
+): Promise<UpdateGuestCartItemResult> {
+  return updateCartItem({ owner: { guestToken: args.guestToken }, ...args });
+}
+
+export function removeGuestCartItem(
+  args: CartRemoveInput & Readonly<{ guestToken: string }>,
+): Promise<RemoveGuestCartItemResult> {
+  return removeCartItem({ owner: { guestToken: args.guestToken }, ...args });
+}
+
+export function addUserCartItem(
+  args: CartAddInput & Readonly<{ userId: string }>,
+): Promise<AddUserCartItemResult> {
+  return addCartItem({ owner: { userId: args.userId }, ...args });
+}
+
+export function updateUserCartItem(
+  args: CartUpdateInput & Readonly<{ userId: string }>,
+): Promise<UpdateUserCartItemResult> {
+  return updateCartItem({ owner: { userId: args.userId }, ...args });
+}
+
+export function removeUserCartItem(
+  args: CartRemoveInput & Readonly<{ userId: string }>,
+): Promise<RemoveUserCartItemResult> {
+  return removeCartItem({ owner: { userId: args.userId }, ...args });
 }

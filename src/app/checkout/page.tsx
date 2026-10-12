@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 
+import { AUTH_COOKIE_NAME } from "../../lib/auth";
 import { CheckoutForm } from "../../components/checkout/CheckoutForm";
 import { CART_COOKIE_NAME, type CartView } from "../../lib/cart";
 import { formatPrice } from "../../lib/format-price";
-import { getGuestCart } from "../../lib/server/cart";
+import { getGuestCart, getUserCart } from "../../lib/server/cart";
+import { getSessionUser } from "../../lib/server/auth";
 
 import styles from "./checkout-page.module.css";
 
@@ -24,8 +26,21 @@ function productHref(productSlug: string, size: string, color: string): string {
 
 export default async function CheckoutPage() {
   const cookieStore = await cookies();
+  const authToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  let userId: string | null = null;
+  if (authToken) {
+    try {
+      userId = (await getSessionUser(authToken))?.id ?? null;
+    } catch {
+      userId = null;
+    }
+  }
   const guestToken = cookieStore.get(CART_COOKIE_NAME)?.value;
-  const cart = guestToken ? await getGuestCart(guestToken) : EMPTY_CART;
+  const cart = userId
+    ? await getUserCart(userId)
+    : guestToken
+      ? await getGuestCart(guestToken)
+      : EMPTY_CART;
 
   return (
     <main className={styles.page}>
@@ -124,7 +139,7 @@ export default async function CheckoutPage() {
           <section aria-labelledby="checkout-details-title" className={styles.details}>
             <p className={styles.sectionEyebrow}>Datos de contacto</p>
             <h2 id="checkout-details-title">Prepara tu envío</h2>
-            <CheckoutForm />
+            <CheckoutForm authenticated={Boolean(userId)} />
           </section>
         </div>
       )}

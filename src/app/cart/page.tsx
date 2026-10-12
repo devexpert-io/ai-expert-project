@@ -2,12 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 
+import { AUTH_COOKIE_NAME } from "../../lib/auth";
 import {
   CART_COOKIE_NAME,
   type CartView,
 } from "../../lib/cart";
 import { formatPrice } from "../../lib/format-price";
-import { getGuestCart } from "../../lib/server/cart";
+import { getGuestCart, getUserCart } from "../../lib/server/cart";
+import { getSessionUser } from "../../lib/server/auth";
 import { CartItemControls } from "../../components/cart/CartItemControls";
 
 import styles from "./cart-page.module.css";
@@ -27,8 +29,21 @@ function productHref(productSlug: string, size: string, color: string): string {
 
 export default async function CartPage() {
   const cookieStore = await cookies();
+  const authToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  let userId: string | null = null;
+  if (authToken) {
+    try {
+      userId = (await getSessionUser(authToken))?.id ?? null;
+    } catch {
+      userId = null;
+    }
+  }
   const guestToken = cookieStore.get(CART_COOKIE_NAME)?.value;
-  const cart = guestToken ? await getGuestCart(guestToken) : EMPTY_CART;
+  const cart = userId
+    ? await getUserCart(userId)
+    : guestToken
+      ? await getGuestCart(guestToken)
+      : EMPTY_CART;
 
   return (
     <main className={styles.page}>

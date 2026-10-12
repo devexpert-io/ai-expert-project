@@ -23,6 +23,10 @@ Reglas durables que las features futuras deben respetar.
 - **Construir cada snapshot y subtotal desde `Variant.priceCents` en enteros seguros, con una línea única por variante y sin confiar en precios del navegador.** Razón: el cliente solo expresa cantidad; el servidor conserva la exactitud monetaria y evita overflow en totales.
 - **Leer `/checkout` únicamente con el `cart_guest_token` HTTP-only existente y construir el resumen desde `getGuestCart`/`CartView`; sin cookie o sin líneas se debe devolver un vacío sin crear identidad.** Razón: la revisión no debe crear carritos huérfanos ni aceptar precios, cantidades o tokens del navegador.
 - **Limitar el borrador de checkout a exactamente `name`, `email`, `phone` y `shippingAddress`, con validación cerrada y límites antes de persistirlo en `sessionStorage["checkout_draft_v1"]`.** Razón: el siguiente slice necesita un contrato pequeño, versionado y libre de campos no previstos.
+- **Guardar contraseñas únicamente como hash bcrypt con coste fijo 12; rechazar sin truncar cualquier contraseña de menos de 8 caracteres o de más de 72 bytes UTF-8.** Razón: bcrypt tiene un límite de entrada por bytes y una contraseña recortada cambiaría las credenciales que el usuario cree haber elegido.
+- **Persistir sesiones opacas solo como hash SHA-256 en `Session`; enviar el token crudo exclusivamente en la cookie HTTP-only `auth_session` de 30 días.** Razón: permite revocación individual y evita tokens en JSON, HTML, URL, `localStorage` o logs.
+- **Realizar registro/login, contacto, asociación o merge de carritos y creación de sesión en una transacción Prisma; comprobar overflow de merge antes de escribir.** Razón: un fallo de credenciales o cantidades no puede dejar usuario, sesión o carrito a medias.
+- **Priorizar una sesión válida sobre `cart_guest_token` en páginas y APIs del carrito; al completar auth invalidar el token invitado y expirar su cookie.** Razón: evita que un bearer token antiguo o una cuenta distinta lea o modifique líneas ajenas.
 
 ## MUST NOT
 
@@ -32,6 +36,7 @@ Reglas durables que las features futuras deben respetar.
 - **No persistir el estado del carrito de invitado en `localStorage` ni aceptar un token de carrito en el JSON público.** Razón: la identidad y la persistencia del carrito viven en SQLite detrás de la cookie HTTP-only.
 - **No enviar ni persistir el borrador de checkout en SQLite, cookies, URL, logs, respuestas públicas o APIs; no usar `localStorage`.** Razón: los datos de contacto y envío son PII efímera de una sola pestaña hasta que `checkout-user` decida cómo materializarlos.
 - **No crear usuarios, sesiones, pedidos, pagos ni reservar/descontar stock durante `checkout-review`.** Razón: esas mutaciones pertenecen a `checkout-user` y `checkout-payment`, y la intención del carrito se mantiene separada de la compra.
+- **No incluir contraseñas, hashes, tokens, userId ni PII en respuestas o logs de auth; una sesión válida debe devolver 409 hasta que se revoque mediante logout.** Razón: el cambio de cuenta requiere una frontera explícita y los secretos no deben cruzar al navegador.
 - **No truncar la base ni ejecutar `prisma migrate reset` durante el arranque**. Razón: preservar datos locales y permitir que el setup sea seguro de repetir.
 - **No añadir despliegue cloud ni CI remoto** en el MVP; solo scripts locales. Razón: non-goal del slice.
 

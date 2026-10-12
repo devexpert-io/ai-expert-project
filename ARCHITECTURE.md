@@ -82,8 +82,22 @@ rehidrata en `useEffect` solo un objeto cerrado válido de
 `sessionStorage["checkout_draft_v1"]`. El contrato contiene exactamente `name`,
 `email`, `phone` y `shippingAddress`; normaliza espacios, valida límites y email
 antes de escribir. Guardar el borrador no hace fetch ni navegación y no escribe
-SQLite, cookies, URL, logs ni una API. Crear cuenta, asociar el carrito,
-revalidar stock y cobrar pertenecen a los slices posteriores.
+SQLite, cookies, URL, logs ni una API. `checkout-user` consume ese borrador en
+memoria: registra o autentica con `bcryptjs` (coste 12), crea una fila `Session`
+con hash SHA-256 de un token opaco y emite únicamente el token crudo en la cookie
+HTTP-only `auth_session`. `src/lib/server/auth.ts` mantiene el servicio
+server-only y realiza en una misma transacción el usuario/contacto, la asociación
+o merge del carrito y la sesión; un overflow del merge no deja mutaciones parciales.
+Las sesiones caducan a los 30 días y `POST /api/auth/logout` revoca la fila y
+expira la cookie. Crear cuenta, asociar el carrito, revalidar stock y cobrar
+siguen siendo pasos separados.
+
+Tras autenticarse, `/cart`, `/checkout` y `POST/PATCH/DELETE /api/cart/items`
+resuelven primero `auth_session` y usan `Cart.userId`; solo cuando no existe una
+sesión válida usan el contrato invitado y `cart_guest_token`. El login/registro
+expira el token invitado después del merge y nunca lo incluye en JSON. Un email
+duplicado, credencial inválida, sesión activa o suma que excede el Int32 devuelven
+mensajes constantes sin hash, contraseña, token, userId ni datos de Prisma.
 
 ## Decisions
 
