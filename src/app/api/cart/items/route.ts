@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { cookies } from "next/headers";
 
+import { AUTH_COOKIE_NAME } from "../../../../lib/auth";
 import {
   CART_BODY_LIMIT,
   CART_COOKIE_MAX_AGE,
@@ -20,9 +21,13 @@ import {
 } from "../../../../lib/cart";
 import {
   addGuestCartItem,
+  addUserCartItem,
   removeGuestCartItem,
+  removeUserCartItem,
   updateGuestCartItem,
+  updateUserCartItem,
 } from "../../../../lib/server/cart";
+import { getSessionUser } from "../../../../lib/server/auth";
 
 export const runtime = "nodejs";
 
@@ -101,6 +106,29 @@ function withGuestCookie(response: Response, token: string): Response {
   return response;
 }
 
+type CartIdentity =
+  | Readonly<{ kind: "user"; userId: string }>
+  | Readonly<{ kind: "guest"; guestToken: string }>;
+
+async function resolveIdentity(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+): Promise<CartIdentity | null> {
+  const authToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  if (authToken) {
+    try {
+      const user = await getSessionUser(authToken);
+      if (user) {
+        return { kind: "user", userId: user.id };
+      }
+    } catch {
+      // An invalid/unavailable auth lookup falls through to the guest cookie.
+    }
+  }
+
+  const guestToken = cookieStore.get(CART_COOKIE_NAME)?.value;
+  return guestToken ? { kind: "guest", guestToken } : null;
+}
+
 function isJsonContentType(contentType: string | null): boolean {
   return (
     contentType === null ||
@@ -136,19 +164,29 @@ export async function POST(request: Request): Promise<Response> {
     return json({ ok: false, message: CART_ERROR_INVALID }, 400);
   }
 
-  let guestToken: string;
+  let identity: CartIdentity;
   let shouldSetCookie = false;
   try {
     const cookieStore = await cookies();
-    const existingToken = cookieStore.get(CART_COOKIE_NAME)?.value;
-    guestToken = existingToken || randomUUID();
-    shouldSetCookie = !existingToken;
+    const resolved = await resolveIdentity(cookieStore);
+    if (resolved) {
+      identity = resolved;
+    } else {
+      identity = { kind: "guest", guestToken: randomUUID() };
+      shouldSetCookie = true;
+    }
   } catch {
     return json({ ok: false, message: CART_UNAVAILABLE }, 500);
   }
 
+  const newGuestToken =
+    shouldSetCookie && identity.kind === "guest" ? identity.guestToken : null;
+
   try {
-    const result = await addGuestCartItem({ ...input, guestToken });
+    const result =
+      identity.kind === "user"
+        ? await addUserCartItem({ ...input, userId: identity.userId })
+        : await addGuestCartItem({ ...input, guestToken: identity.guestToken });
 
     if (!result.ok) {
       if (result.code === "quantity_overflow") {
@@ -156,7 +194,7 @@ export async function POST(request: Request): Promise<Response> {
           { ok: false, message: CART_ERROR_INVALID },
           400,
         );
-        return shouldSetCookie ? withGuestCookie(response, guestToken) : response;
+        return newGuestToken ? withGuestCookie(response, newGuestToken) : response;
       }
 
       const response = json(
@@ -169,11 +207,11 @@ export async function POST(request: Request): Promise<Response> {
         },
         result.code === "variant_not_found" ? 404 : 409,
       );
-      return shouldSetCookie ? withGuestCookie(response, guestToken) : response;
+      return newGuestToken ? withGuestCookie(response, newGuestToken) : response;
     }
 
     const response = json(result, 200);
-    return shouldSetCookie ? withGuestCookie(response, guestToken) : response;
+    return newGuestToken ? withGuestCookie(response, newGuestToken) : response;
   } catch {
     return json({ ok: false, message: CART_UNAVAILABLE }, 500);
   }
@@ -195,11 +233,6 @@ function mutationErrorResponse(
   }
 
   return json({ ok: false, message: CART_ERROR_SOLD_OUT }, 409);
-}
-
-async function existingGuestToken(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(CART_COOKIE_NAME)?.value || null;
 }
 
 async function handleMutation(
@@ -236,28 +269,38 @@ async function handleMutation(
     return json({ ok: false, message: CART_ERROR_INVALID }, 400);
   }
 
-  let guestToken: string | null;
+  let identity: CartIdentity | null;
   try {
-    guestToken = await existingGuestToken();
+    identity = await resolveIdentity(await cookies());
   } catch {
     return json({ ok: false, message: CART_UNAVAILABLE }, 500);
   }
 
-  if (!guestToken) {
+  if (!identity) {
     return json({ ok: false, message: CART_ERROR_ITEM_NOT_FOUND }, 404);
   }
 
   try {
     const result =
-      method === "PATCH"
-        ? await updateGuestCartItem({
-            ...(input as NonNullable<ReturnType<typeof parseCartUpdateInput>>),
-            guestToken,
-          })
-        : await removeGuestCartItem({
-            ...(input as NonNullable<ReturnType<typeof parseCartRemoveInput>>),
-            guestToken,
-          });
+      identity.kind === "user"
+        ? method === "PATCH"
+          ? await updateUserCartItem({
+              ...(input as NonNullable<ReturnType<typeof parseCartUpdateInput>>),
+              userId: identity.userId,
+            })
+          : await removeUserCartItem({
+              ...(input as NonNullable<ReturnType<typeof parseCartRemoveInput>>),
+              userId: identity.userId,
+            })
+        : method === "PATCH"
+          ? await updateGuestCartItem({
+              ...(input as NonNullable<ReturnType<typeof parseCartUpdateInput>>),
+              guestToken: identity.guestToken,
+            })
+          : await removeGuestCartItem({
+              ...(input as NonNullable<ReturnType<typeof parseCartRemoveInput>>),
+              guestToken: identity.guestToken,
+            });
 
     if (!result.ok) {
       return mutationErrorResponse(result);

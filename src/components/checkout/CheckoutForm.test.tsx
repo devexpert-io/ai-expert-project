@@ -98,4 +98,69 @@ describe("CheckoutForm", () => {
       expect(screen.getByLabelText("Nombre")).toHaveValue("Ana García"),
     );
   });
+
+  it("registers without persisting the password and announces the active session", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<CheckoutForm />);
+
+    for (const [field, value] of Object.entries(validValues)) {
+      fireEvent.change(screen.getByLabelText(
+        field === "shippingAddress"
+          ? "Dirección de envío"
+          : field === "name"
+            ? "Nombre"
+            : field === "email"
+              ? "Email"
+              : "Teléfono",
+      ), { target: { value } });
+    }
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
+      target: { value: "correct horse" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Cuenta creada. Sesión iniciada.")).toBeInTheDocument(),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/checkout",
+      expect.objectContaining({ method: "POST" }),
+    );
+    const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(JSON.parse(String(requestInit.body))).toEqual({
+      mode: "register",
+      ...validValues,
+      password: "correct horse",
+    });
+    expect(JSON.parse(window.sessionStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY) ?? "null")).toEqual(
+      validValues,
+    );
+    expect(window.sessionStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY)).not.toContain(
+      "correct horse",
+    );
+    expect(screen.queryByLabelText("Contraseña")).not.toBeInTheDocument();
+    expect(screen.getByText("Sesión activa")).toBeInTheDocument();
+  });
+
+  it("revokes the session from the authenticated checkout state", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<CheckoutForm authenticated />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent("Sesión cerrada."),
+    );
+    expect(fetchMock).toHaveBeenCalledWith("/api/auth/logout", { method: "POST" });
+    expect(screen.getByRole("button", { name: "Entrar" })).toBeInTheDocument();
+  });
 });

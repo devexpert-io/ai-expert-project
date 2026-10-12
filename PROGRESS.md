@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `checkout-user` con `feature-spec`
+- Siguiente paso: planificar `checkout-payment` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `checkout-review` aceptada por validator independiente (2026-10-12); gate217 tests y navegador390×844/1280×800.
+- Última verificación: `checkout-user` aceptada por validator independiente (2026-10-12); gate236 tests y QA390×844/1280×800.
 
 ## Registro de sesión
 
@@ -373,3 +373,29 @@
 - Fecha:2026-10-12. Validator:`accept`; 217 tests, lint/typecheck, gate/build y QA390×844/1280×800 verificados.
 - GET aislado localhost:4381 sin cookie mostró vacío200 sin formulario ni Set-Cookie; borrador con cuatro campos, privacidad y parser cerrado comprobados.
 - Estado:accepted. Siguiente:`checkout-user`.
+
+### Sesión 020 — `checkout-user`
+
+- Fecha: 2026-10-12
+- Objetivo: permitir registro/login desde checkout, asociar el carrito invitado a la cuenta y mantener sesiones revocables sin cambiar pagos ni pedidos.
+- Completado:
+  - Añadidos `User.sessions`, `Session.tokenHash/expiresAt` y la migración `prisma/migrations/20261012130000_checkout_user`; la migración es aditiva y conserva los datos existentes.
+  - Servicio server-only con bcryptjs coste 12, token opaco hasheado con SHA-256, expiración de 30 días, validación de contraseña de 8 caracteres y 72 bytes UTF-8, sesión válida con 409 al intentar cambiar de cuenta, registro/login/logout y revocación.
+  - Registro/login combina el carrito invitado con el carrito del usuario en una transacción, valida overflow antes de escribir, elimina el carrito guest y prioriza la sesión válida en `/api/cart/items`, `/cart` y `/checkout`.
+  - UI de checkout con modos «Crear cuenta»/«Ya tengo cuenta», estado de sesión, logout, mensajes accesibles y password solo en memoria; no se incluye payment/order.
+  - Actualizados `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/domain-model.md`, `docs/technical-discovery.md` y `docs/risks-and-open-questions.md`.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` -> exit 0 con Node v22.23.2/pnpm 10.18.3; db setup/verify, lint, typecheck, 33 archivos y 236 tests, build con las rutas de auth, carrito y checkout.
+  - `git diff --check` -> exit 0; `prisma migrate status` indicó base al día; cuentas y tokens de prueba se eliminaron de la base local tras el smoke.
+  - Tests cubren contrato cerrado, normalización, bcrypt, límite UTF-8 sin truncado, cookies, expiración/revocación, credenciales inválidas, sesión activa, merge/overflow, aislamiento por usuario y UI sin password persistida.
+  - Smoke real en `http://localhost:3107`: registro y login/logout, asociación del guest, aislamiento entre cuentas, 409 al cambiar de cuenta con sesión válida y 404 del guest revocado.
+  - QA DevTools MCP en `/checkout` emulado a 390x844 y 1280x800: sin overflow horizontal; móvil apilado y escritorio en dos columnas; consola solo aviso informativo de React DevTools y red sin peticiones fallidas. Capturas `/tmp/checkout-user-qa-390.png` y `/tmp/checkout-user-qa-1280.png`.
+- Estado: `checkout-user` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo o cuestión no resuelta: la sesión se valida en cada lectura de carrito y caduca por `expiresAt`; el validator debe comprobar de forma independiente los contratos de cookie, merge y revocación sobre una base aislada.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `checkout-user`.
+
+### Aceptación independiente — `checkout-user`
+
+- Fecha:2026-10-12. Validator:`accept`; gate236 tests, migración/DB/build y QA390×844/1280×800 verificados.
+- SQLite aislado: overflow login conserva contacto/carritos/sesiones, merge válido conserva repetidas6/distintas2 y revoca guest; sesión expirada/revocada devuelve null. Cookies producción seguras y sin secretos en cliente.
+- Estado:accepted. Siguiente:`checkout-payment`.

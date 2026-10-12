@@ -60,7 +60,10 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 ## Authentication and Authorization
 
 - Sesión de invitado anónima mediante cookie HTTP-only para el carrito; el estado durable vive en SQLite y no en `localStorage`.
-- Registro/login de usuario en el checkout vía credenciales (email + password). Considerar almacenar hash (p. ej. bcrypt) y sesión con cookie.
+- Registro/login de usuario en el checkout vía credenciales (email + password). `bcryptjs` con coste fijo 12 guarda solo `User.passwordHash`; se rechazan passwords de menos de 8 caracteres o de más de 72 bytes UTF-8 sin truncar.
+- `Session` guarda `tokenHash` SHA-256, `userId` y `expiresAt`; el token aleatorio crudo solo vive en `auth_session` (HttpOnly, SameSite=Lax, Path=/, 30 días, Secure en producción). Logout borra la fila y expira la cookie.
+- `POST /api/auth/checkout` acepta solo `{ mode, email, password, name, phone, shippingAddress }`, valida Origin/body cerrado y realiza usuario/contacto, merge del carrito y sesión en una transacción. Email duplicado, credencial inválida, sesión activa y overflow responden sin mutación parcial ni secretos.
+- Con sesión válida, `/cart`, `/checkout` y las APIs del carrito resuelven el `Cart` por `userId`; el carrito invitado se asocia o fusiona sumando líneas y el `cart_guest_token` antiguo se revoca y expira. Sin sesión se conserva exactamente el contrato invitado.
 - Los pedidos solo son visibles para el usuario propietario.
 
 ## Deployment and Operations
@@ -78,6 +81,22 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 - Smoke test del flujo de compra y de las funciones de IA con clave real o mock.
 - Gate local reproducible: `pnpm db:setup`, `pnpm db:verify`, lint +
   typecheck + tests + build desde `./init.sh`.
+
+### Contrato implementado de creación de usuario en checkout (`checkout-user`)
+
+- `src/lib/auth.ts` mantiene el parser cerrado, límites de body/password,
+  mensajes constantes y serialización de cookies sin secretos. El password solo
+  se mantiene en memoria de `CheckoutForm`; el borrador de `sessionStorage` sigue
+  teniendo exactamente los cuatro campos de contacto.
+- `src/lib/server/auth.ts` usa bcryptjs, tokens aleatorios con hash SHA-256,
+  expiración/revocación de `Session` y merge atómico. La suma de líneas se valida
+  antes de mutar y una sesión activa fuerza logout antes de cambiar de cuenta.
+- `POST /api/auth/checkout` y `POST /api/auth/logout` responden `no-store`,
+  validan Origin y no devuelven userId, hash, token ni datos Prisma. Los errores
+  de credenciales se mantienen genéricos.
+- La identidad del carrito es una unión de `guestToken`/`userId` en
+  `src/lib/server/cart.ts`; con sesión se prioriza el usuario y no se emite una
+  cookie invitada nueva. Pago, pedidos y stock siguen fuera de este slice.
 
 ## Contrato implementado del carrito anónimo (`cart-add`)
 

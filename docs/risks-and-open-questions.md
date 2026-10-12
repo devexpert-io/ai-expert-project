@@ -10,6 +10,7 @@
 
 - ¿Qué estados tiene un `Pedido` completo (enviado/entregado/devuelto) o basta con `Pagado`/`Cancelado`?
 - **Carrito de invitado resuelto (`cart-add`)**: persiste en SQLite mediante `Cart`/`CartItem` y una cookie `cart_guest_token` HTTP-only, SameSite=Lax y de 30 días. No se usa `localStorage`; la futura asociación a `User` queda para checkout.
+- **Autenticación en checkout resuelta (`checkout-user`)**: `bcryptjs` coste 12, password de 8 caracteres y máximo 72 bytes UTF-8 sin truncar, sesión opaca en `Session` (hash SHA-256, 30 días, revocable) y cookie `auth_session` HttpOnly. Registro/login, contacto y merge/asociación del carrito son atómicos; el token invitado se revoca tras éxito y una sesión activa exige logout para cambiar de cuenta.
 - ¿Dónde se guardan/almacenan las imágenes *generadas* del try-on?
   **Resuelto (`tryon-result`)**: data URL efímera en memoria; no disco, no
   URL temporal persistida, no fila `TryonImage`. Recargar descarta el resultado.

@@ -349,14 +349,23 @@
     "depends_on": [
       "checkout-review"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Al confirmar los datos se crea el usuario y se inicia sesión (cookie).",
       "El carrito de invitado se asocia al nuevo usuario.",
       "Un usuario existente puede iniciar sesión en lugar de crear cuenta."
     ],
-    "evidence": [],
-    "notes": "Auth con credenciales email+password y hash (bcrypt) según technical-discovery.md. Edge case: carrito de invitado que crea cuenta persiste."
+    "evidence": [
+      "Implementados User/Session con migración no destructiva; bcryptjs cost 12, token opaco con hash SHA-256, expiración de 30 días y cookie auth_session HttpOnly/SameSite=Lax; logout revoca y expira la cookie.",
+      "POST /api/auth/checkout aplica contrato JSON cerrado, Origin/content-type/body limit, contraseña de 8 caracteres y máximo 72 bytes UTF-8 sin truncar, registro/login y respuestas sin secretos; sesión válida bloquea cambio de cuenta con 409.",
+      "Registro/login asocia o combina el carrito guest dentro de una transacción; el guest se revoca, el overflow se comprueba antes de escribir y los cart APIs/pages resuelven sesión válida antes que guest sin perder el contrato invitado.",
+      "Tests focalizados y suite ejecutados con Node v22.23.2/pnpm 10.18.3: 33 archivos y 236 tests en verde; cubren bcrypt, parser cerrado, byte-limit, cookie/session, registro/login/logout, merge/overflow, guest revocado, aislamiento y UI sin password persistida.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh -> exit 0: db:setup/db:verify, lint, typecheck, 33 archivos y 236 tests, build con /api/auth/checkout, /api/auth/logout, /cart y /checkout; git diff --check -> exit 0.",
+      "Smoke real en http://localhost:3107: registro y login/logout conservaron/aislaron el carrito por cuenta; sesión A intentó registrar otra cuenta y recibió 409 seguro; el guest token anterior respondió 404 tras la asociación.",
+      "QA DevTools MCP en http://localhost:3107/checkout: emulación 390x844 y 1280x800, scrollWidth=clientWidth en ambos, checkout apilado en móvil y dos columnas en escritorio; consola solo aviso informativo React DevTools y peticiones 200/304 sin fallos. Capturas: /tmp/checkout-user-qa-390.png y /tmp/checkout-user-qa-1280.png.",
+      "2026-10-12: feature-validator independiente accept; gate236 tests/DB/build repetido, smoke SQLite real de expiración/revocación y fusión con rollback ante overflow, cookies producción y QA390x844/1280x800 revisados."
+    ],
+    "notes": "Aceptada por validator independiente. Sesión opaca revocable y carrito asociado a cuenta, guest token anterior invalidado. Pago/pedidos en siguientes features."
   },
   {
     "id": "checkout-payment",
