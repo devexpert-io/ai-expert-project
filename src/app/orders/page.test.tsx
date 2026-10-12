@@ -89,6 +89,12 @@ describe("/orders", () => {
     expect(screen.getAllByText("Pagado")).toHaveLength(2);
     expect(screen.getAllByText("Cancelado")).toHaveLength(2);
     expect(screen.getAllByText("Pendiente de pago")).toHaveLength(2);
+    const detailLinks = screen.getAllByRole("link", { name: "Ver detalle del pedido" });
+    expect(detailLinks).toHaveLength(3);
+    expect(detailLinks[0]).toHaveAttribute(
+      "href",
+      "/orders/order-paid",
+    );
     expect(screen.getByText(/39,80/u)).toBeInTheDocument();
     expect(screen.getByText(/24,90/u)).toBeInTheDocument();
     expect(screen.getByText(/19,90/u)).toBeInTheDocument();

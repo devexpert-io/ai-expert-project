@@ -139,7 +139,21 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 - El mapa cerrado traduce `PAID`, `CANCELLED` y `PENDING_PAYMENT` a «Pagado»,
   «Cancelado» y «Pendiente de pago»; estados desconocidos se omiten. La fecha se
   formatea en `es-ES` con zona `Europe/Madrid`, y el vacío ofrece un enlace al
-  catálogo. Este slice no crea API de pedidos ni detalle.
+  catálogo. Cada tarjeta enlaza a `/orders/[id]` con un ID opaco solo en el href.
+
+### Contrato implementado del detalle de pedidos (`orders-detail`)
+
+- `/orders/[id]` repite la guardia de sesión del listado y redirige al checkout
+  antes de cualquier consulta cuando falta o caduca `auth_session`.
+- La lectura owner-scoped usa `findFirst` con `{ id, userId }` y selecciona solo
+  `Order.status`, `totalCents`, `createdAt` y los cinco valores snapshot de cada
+  línea: `productName`, `size`, `color`, `quantity`, `unitPriceCents`. No hay
+  relación al catálogo actual, stock, usuario, dirección ni contacto.
+- En lectura se derivan los subtotales con enteros seguros y se comprueba la
+  suma contra `Order.totalCents`; estados cerrados y snapshots inválidos se
+  rechazan como `404`. Un ID ajeno y uno inexistente comparten exactamente esa
+  respuesta, sin HTML de pedido ni ID visible. La pantalla muestra estado, fecha,
+  líneas, precio unitario, total de línea, total persistido y vuelta al listado.
 
 ## Contrato implementado del carrito anónimo (`cart-add`)
 
