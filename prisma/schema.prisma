@@ -116,16 +116,18 @@ model CartItem {
 }
 
 model Order {
-  id         String   @id @default(cuid())
-  userId     String
-  status     String   @default("PENDING_PAYMENT")
-  totalCents Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String
+  status             String   @default("PENDING_PAYMENT")
+  totalCents         Int
+  idempotencyKeyHash String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   user  User        @relation(fields: [userId], references: [id])
   lines OrderLine[]
 
+  @@unique([userId, idempotencyKeyHash])
   @@index([userId])
 }
 

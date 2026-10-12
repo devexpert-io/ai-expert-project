@@ -89,8 +89,25 @@ HTTP-only `auth_session`. `src/lib/server/auth.ts` mantiene el servicio
 server-only y realiza en una misma transacción el usuario/contacto, la asociación
 o merge del carrito y la sesión; un overflow del merge no deja mutaciones parciales.
 Las sesiones caducan a los 30 días y `POST /api/auth/logout` revoca la fila y
-expira la cookie. Crear cuenta, asociar el carrito, revalidar stock y cobrar
-siguen siendo pasos separados.
+expira la cookie. Crear cuenta y asociar el carrito son pasos separados del
+cobro, que pertenece a `checkout-payment`.
+
+`POST /api/checkout/payment` solo acepta una sesión `auth_session` válida, el
+cuerpo cerrado `{ outcome: "approved" | "rejected" }` y una cabecera
+`Idempotency-Key` ASCII acotada. El servicio server-only hashea la clave, relee
+el `Cart` del usuario y las variantes actuales dentro de una transacción, y crea
+un `Order`/`OrderLine` con snapshots de nombre, talla, color, cantidad y precio
+en céntimos. `Order.idempotencyKeyHash` es nullable para conservar pedidos
+históricos y único junto a `userId` para que un replay, incluso con el carrito ya
+vacío o con otro outcome, devuelva el mismo pedido.
+
+Para un pago aprobado, la transacción actualiza cada variante con la condición
+`stock >= quantity`, crea el pedido `PAID` y elimina las líneas del carrito; un
+fallo revierte todo y evita overselling. Un pago rechazado crea `CANCELLED`,
+conserva stock y carrito, y el reintento de UI genera otra clave. Un update
+benigno del carrito serializa compradores SQLite antes de leer el snapshot; los
+conflictos transitorios se reintentan de forma acotada y las respuestas públicas
+solo contienen estado, `orderId` y total.
 
 Tras autenticarse, `/cart`, `/checkout` y `POST/PATCH/DELETE /api/cart/items`
 resuelven primero `auth_session` y usan `Cart.userId`; solo cuando no existe una
@@ -105,7 +122,9 @@ mensajes constantes sin hash, contraseña, token, userId ni datos de Prisma.
 - **Migraciones y seed**: el arranque local ejecuta `prisma generate`,
   `prisma migrate deploy` y `prisma db seed` mediante `pnpm db:setup`. El seed
   hace upsert únicamente de categorías, productos y variantes, por slug/SKU,
-  y no borra usuarios, carritos, pedidos, chats ni imágenes existentes.
+  y no borra usuarios, carritos, pedidos, chats ni imágenes existentes. Para una
+  variante ya existente, actualiza sus datos editoriales y precio pero conserva
+  el `stock` runtime para no reponer ventas al reiniciar.
 - **Preparación automática**: `predev` y `prestart` llaman a `pnpm db:setup`;
   `.env` se copia desde `.env.example` solo cuando falta. `pnpm db:verify`
   comprueba la estructura y los mínimos del fixture sin escribir en la base.

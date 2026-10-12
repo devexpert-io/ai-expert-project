@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `checkout-payment` con `feature-spec`
+- Siguiente paso: planificar `orders-list` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `checkout-user` aceptada por validator independiente (2026-10-12); gate236 tests y QA390×844/1280×800.
+- Última verificación: `checkout-payment` aceptada por validator independiente (2026-10-12); gate252 tests y QA390×844/1280×800.
 
 ## Registro de sesión
 
@@ -399,3 +399,44 @@
 - Fecha:2026-10-12. Validator:`accept`; gate236 tests, migración/DB/build y QA390×844/1280×800 verificados.
 - SQLite aislado: overflow login conserva contacto/carritos/sesiones, merge válido conserva repetidas6/distintas2 y revoca guest; sesión expirada/revocada devuelve null. Cookies producción seguras y sin secretos en cliente.
 - Estado:accepted. Siguiente:`checkout-payment`.
+
+### Sesión 021 — `checkout-payment`
+
+- Fecha: 2026-10-12
+- Objetivo: cobrar mediante simulador aprobado/rechazado para crear pedidos con snapshot de precios, validar stock vigente y hacer replay idempotente por usuario.
+- Completado:
+  - `Order.idempotencyKeyHash` nullable con índice único compuesto `[userId, idempotencyKeyHash]` en `prisma/migrations/20261012133000_checkout_payment`; seed preserva el stock de variantes existentes.
+  - Servicio server-only `src/lib/server/payment.ts`: precios/nombres/cantidades leídos del servidor, líneas y total snapshot, PAID con decremento condicional y vaciado de carrito en una transacción, CANCELLED conserva stock/carrito, conflictos de SQLite reintentables y replay por hash incluso con carrito ya vacío.
+  - `POST /api/checkout/payment`: sesión válida obligatoria, contrato cerrado `{outcome}`, `Idempotency-Key` ASCII acotada, Origin/content-type/body limit, respuestas seguras 401/409/413/503 y `Cache-Control: no-store`.
+  - `SimulatedPayment` integrado tras autenticación en checkout: aviso fijo de no cobro, aprobado/rechazado determinista, retry con clave nueva tras rechazo y sin persistir clave/resultado en cliente.
+  - `scripts/verify-seed.mjs` tolera mezcla de variantes agotadas después de pedidos y exige agotada/disponible solo en una base sin pedidos. Documentación actualizada en `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/domain-model.md`, `docs/technical-discovery.md` y `docs/risks-and-open-questions.md`.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` -> exit 0 con Node v22.23.2/pnpm 10.18.3; migración, db:setup/verify, lint, typecheck, 37 archivos y 252 tests, build con `/api/checkout/payment`. Log: `/tmp/ai-expert-checkout-payment-gate-20261012.log`.
+  - `git diff --check` -> exit 0; no se añadieron dependencias ni claves JSON duplicadas.
+  - Smoke aislado en `http://localhost:4369` con `DATABASE_URL=file:/tmp/ai-expert-checkout-payment-20261012.db`: aprobado creó PAID con total/line snapshot, descontó stock y vació carrito; mismo key replayó sin duplicado; rechazado creó CANCELLED conservando stock/carrito; nueva clave aprobó el retry; ausencia de sesión devolvió 401; stock cambiado devolvió 409 y conservó carrito.
+  - Concurrencia real sobre última unidad: dos usuarios en paralelo produjeron exactamente un 200 PAID y un 409 de stock, stock final 0 y un solo pedido PAID. Misma clave en paralelo (outcomes approved/rejected) devolvió a ambos el mismo PAID/orderId, un único pedido, carrito vacío y stock 10→9.
+  - Reejecución de `DATABASE_URL=file:/tmp/ai-expert-checkout-payment-20261012.db pnpm db:setup` no restauró stock vendido (variante seguía en 0); `pnpm db:verify` pasó con mezcla `disponibles=22, agotadas=2` y 4 pedidos.
+  - QA Chrome DevTools MCP en `/checkout`: 390x844 y 1280x800 sin overflow (`scrollWidth=clientWidth`), aviso de simulación visible, flujo aprobado y rechazo CANCELLED con retry; consola solo info de React DevTools y POST de pago 200. Capturas vigentes se sustituyen en la reparación del validator.
+- Estado: `checkout-payment` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo o cuestión no resuelta: el pago sigue siendo un simulador local sin pasarela externa; el validator debe comprobar de forma independiente el contrato de replay y la atomicidad sobre una base aislada.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `checkout-payment`.
+
+### Reparación validator — `checkout-payment`
+
+- Fecha: 2026-10-12
+- Motivo: el validator detectó una frase obsoleta en `CheckoutForm` y que el botón de retry rechazado volvía a enviar `outcome=rejected` sin permitir elegir un nuevo resultado.
+- Correcciones:
+  - La nota general del checkout ahora solo indica que los datos se guardan para retomarlos; el aviso de no cobro queda en el bloque `Pago simulado`.
+  - `Reintentar pago` limpia el pedido cancelado y abre de nuevo el selector. El usuario puede elegir `Aprobar pago` o `Rechazar pago`; al enviar se genera una clave nueva. Los reintentos de red conservan la clave del intento que no obtuvo respuesta.
+  - Regresión de componente cubre rechazo → retry → selección aprobada → PAID sin recarga y comprueba body/key nuevos; el test de red conserva la misma key.
+- Verificación ejecutada:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm test -- src/components/checkout/SimulatedPayment.test.tsx src/components/checkout/CheckoutForm.test.tsx` (Vitest ejecuta 37 archivos/252 tests) -> exit 0.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` -> exit 0 con Node v22.23.2/pnpm 10.18.3, 37 archivos/252 tests y build. Log: `/tmp/ai-expert-checkout-payment-gate-20261012-repair.log`.
+  - QA MCP en `http://localhost:4379/checkout`: 390x844 mostró CANCELLED, `Reintentar pago`, selector y PAID sin reload; 1280x800 tuvo PAID visible en la captura desktop independiente. Ambas sin overflow, consola solo info React DevTools y POST de pago 200. Capturas reparadas: `/tmp/checkout-payment-repair-rejected-390.png`, `/tmp/checkout-payment-repair-retry-390.png`, `/tmp/checkout-payment-repair-success-390.png`, `/tmp/checkout-payment-repair-success-1280.png`.
+- Estado: `checkout-payment` permanece en `passing`, pendiente de nueva validación independiente; no `accepted`.
+
+### Aceptación independiente — `checkout-payment`
+
+- Validator: **ACCEPT** después de reparar el texto y el reintento; 9 tests focales, lint/typecheck/diff-check OK. Gate final252 tests y capturas de pago aprobado390/1280, rechazo y selector revisadas.
+- Evidencia previa válida: stock/carrito atómicos, snapshot, 401/409, replay y concurrencia sobre última unidad; seed conserva stock vendido.
+- Estado: `accepted`. Siguiente: `orders-list`.
