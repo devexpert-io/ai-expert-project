@@ -47,6 +47,18 @@ con categoría y variantes. La talla y el color se resuelven desde query params 
 contra esas variantes; solo una pareja exacta expone su precio y stock, y la UI no
 importa Prisma ni mantiene estado cliente.
 
+El carrito anónimo mantiene su identidad en la cookie HTTP-only `cart_guest_token`.
+`POST /api/cart/items` valida un cuerpo cerrado, comprueba `Origin` y resuelve la
+variante por ID en `src/lib/server/cart.ts` antes de abrir o actualizar el `Cart` y
+su `CartItem` único dentro de una transacción Prisma. La respuesta solo devuelve la
+cantidad acumulada y el total de unidades; no expone Prisma, precios enviados por el
+cliente ni el token. `CartAddForm` es la única isla cliente de este slice y usa
+`credentials: "same-origin"`; no persiste estado en `localStorage`. El alta comprueba
+que el stock sea positivo, pero no reserva ni descuenta unidades: checkout debe
+revalidar el stock vigente. La cantidad de cada `CartItem` permanece dentro del
+máximo Int32 de Prisma (`2_147_483_647`); un alta que desbordaría esa suma devuelve
+`400` antes de mutar el carrito.
+
 ## Decisions
 
 - **ORM**: Prisma (v6) con SQLite, decisión tomada en `bootstrap-stack`. `DATABASE_URL="file:./dev.db"`. Alternativa evaluada: Drizzle; descartada por familiaridad y tooling de migraciones integrado de Prisma.

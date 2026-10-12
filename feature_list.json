@@ -29,7 +29,9 @@
     "area": "bootstrap",
     "title": "Modelo de datos y seed del catálogo",
     "user_visible_behavior": "Al iniciar la app se cargan categorías, productos y variantes (talla/color/stock/precio) de ejemplo en SQLite.",
-    "depends_on": ["bootstrap-stack"],
+    "depends_on": [
+      "bootstrap-stack"
+    ],
     "status": "accepted",
     "verification": [
       "Las migraciones crean las tablas User, Product, Variant, Category, Cart/CartItem, Order, OrderLine, Chat, TryonImage.",
@@ -51,7 +53,9 @@
     "area": "ai",
     "title": "Configuración del proveedor de IA por entorno",
     "user_visible_behavior": "El proveedor/modelo de IA se configura por variables de entorno y sin clave la app degrada con un mensaje claro.",
-    "depends_on": ["bootstrap-stack"],
+    "depends_on": [
+      "bootstrap-stack"
+    ],
     "status": "accepted",
     "verification": [
       "La ruta de proveedor/modelo es configurable por env (no cableada).",
@@ -73,7 +77,9 @@
     "area": "catalog",
     "title": "Listado de catálogo",
     "user_visible_behavior": "El usuario ve una cuadrícula responsive de productos con imagen, nombre, categoría y precio.",
-    "depends_on": ["bootstrap-seed"],
+    "depends_on": [
+      "bootstrap-seed"
+    ],
     "status": "accepted",
     "verification": [
       "La página de catálogo lista los productos del seed con nombre, imagen, categoría y precio.",
@@ -95,7 +101,9 @@
     "area": "catalog",
     "title": "Filtrado del catálogo",
     "user_visible_behavior": "El usuario filtra el listado por categoría, talla, color y rango de precio.",
-    "depends_on": ["catalog-list"],
+    "depends_on": [
+      "catalog-list"
+    ],
     "status": "accepted",
     "verification": [
       "Seleccionar una categoría reduce el listado solo a productos de esa categoría.",
@@ -119,7 +127,9 @@
     "area": "catalog",
     "title": "Ordenación del catálogo",
     "user_visible_behavior": "El usuario ordena el listado por precio, novedad o nombre.",
-    "depends_on": ["catalog-list"],
+    "depends_on": [
+      "catalog-list"
+    ],
     "status": "accepted",
     "verification": [
       "Ordenar por precio (asc/desc), novedad y nombre cambia el orden del listado.",
@@ -142,7 +152,9 @@
     "area": "catalog",
     "title": "Detalle de producto con selector de variante",
     "user_visible_behavior": "El usuario ve la ficha del producto (imagen, descripción, precio) y selecciona talla/color viendo el stock disponible.",
-    "depends_on": ["catalog-list"],
+    "depends_on": [
+      "catalog-list"
+    ],
     "status": "accepted",
     "verification": [
       "La página de detalle muestra imagen, descripción, precio y las variantes disponibles.",
@@ -164,7 +176,10 @@
     "area": "chatbot",
     "title": "Chatbot de consultas del catálogo",
     "user_visible_behavior": "El usuario abre el chatbot, hace preguntas de la tienda/catálogo y recibe respuestas con contexto real del catálogo.",
-    "depends_on": ["ai-provider-config", "bootstrap-seed"],
+    "depends_on": [
+      "ai-provider-config",
+      "bootstrap-seed"
+    ],
     "status": "accepted",
     "verification": [
       "El widget de chat se abre y permite enviar mensajes.",
@@ -183,7 +198,9 @@
     "area": "chatbot",
     "title": "Recomendación de productos del chatbot",
     "user_visible_behavior": "El chatbot recomienda productos/variantes válidos del catálogo ante peticiones del usuario.",
-    "depends_on": ["chatbot-conversation"],
+    "depends_on": [
+      "chatbot-conversation"
+    ],
     "status": "accepted",
     "verification": [
       "Al pedir una recomendación, el chatbot devuelve productos/variantes existentes en el catálogo.",
@@ -204,7 +221,9 @@
     "area": "tryon",
     "title": "Subida de foto para la prueba virtual",
     "user_visible_behavior": "En el detalle de producto el usuario sube una foto y ve la validación y el aviso de privacidad.",
-    "depends_on": ["product-detail"],
+    "depends_on": [
+      "product-detail"
+    ],
     "status": "accepted",
     "verification": [
       "La página de detalle permite subir una foto con preview.",
@@ -223,7 +242,10 @@
     "area": "tryon",
     "title": "Generación y muestra del resultado de la prueba virtual",
     "user_visible_behavior": "El usuario envía la foto y ve la prenda puesta generada sobre su imagen, o un error claro si falla.",
-    "depends_on": ["tryon-upload", "ai-provider-config"],
+    "depends_on": [
+      "tryon-upload",
+      "ai-provider-config"
+    ],
     "status": "accepted",
     "verification": [
       "Al enviar la foto se genera y muestra la imagen con la prenda puesta.",
@@ -244,22 +266,37 @@
     "area": "cart",
     "title": "Añadir variante al carrito",
     "user_visible_behavior": "El usuario añade una variante al carrito con una cantidad, sin necesidad de cuenta, y el carrito persiste.",
-    "depends_on": ["product-detail"],
-    "status": "not_started",
+    "depends_on": [
+      "product-detail"
+    ],
+    "status": "accepted",
     "verification": [
       "Añadir una variante con cantidad crea/actualiza un ítem en el carrito.",
       "El carrito persiste entre recargas de página (invitado).",
       "No se puede añadir una variante agotada."
     ],
-    "evidence": [],
-    "notes": "Carrito persistente para invitados sin registro (docs/build-brief.md, domain-model.md). Persistencia local vs servidor: pregunta abierta en risks-and-open-questions.md."
+    "evidence": [
+      "Implementados parser cerrado y límite de 8 KiB en src/lib/cart.ts; servicio server-only transaccional en src/lib/server/cart.ts; POST /api/cart/items con Origin, cookie HTTP-only y respuestas no-store; CartAddForm accesible integrado solo para una variante exacta disponible.",
+      "pnpm test -- src/lib/cart.test.ts src/lib/server/cart.test.ts src/app/api/cart/items/route.test.ts src/components/cart/CartAddForm.test.tsx src/components/product/ProductDetail.test.tsx -> exit 0; el runner verificó 24 archivos y 163 tests.",
+      "CI=true ./init.sh -> exit 0 (Node v22.23.2, pnpm 10.18.3; db:setup, db:verify, lint, typecheck, 163 tests y build). Log: /tmp/ai-expert-cart-add-gate-20261012.log.",
+      "Reparación por overflow Int32: CART_QUANTITY_MAX=2_147_483_647 se aplica al parser, servicio y control max de la UI; una suma existing+quantity que supera el máximo termina en 400 antes de cualquier upsert.",
+      "CI=true ./init.sh tras la reparación -> exit 0 (Node v22.23.2, pnpm 10.18.3; db:setup, db:verify, lint, typecheck, 24 archivos y 169 tests, build). Log: /tmp/ai-expert-cart-add-overflow-gate-20261012.log.",
+      "Smoke endpoint real aislado con servidor propio http://localhost:4327 y DATABASE_URL temporal /tmp/ai-expert-cart-overflow-20261012.db: POST quantity=2_147_483_647 devolvió 200; el mismo token con +1 devolvió 400 no-store sin Set-Cookie y la fila SQLite permaneció en 2_147_483_647; quantity=2_147_483_648 con token nuevo devolvió 400 no-store y no creó fila.",
+      "Smoke browser en http://localhost:4317/products/camiseta-basica?size=S&color=Negro con chrome-devtools MCP: viewport 390x844 añadió 2, recargó y añadió 1 reutilizando cart_guest_token; respuestas 200 con item.quantity=3/itemCount=3, Set-Cookie HttpOnly/SameSite=Lax/Max-Age=2592000 y segunda petición con Cookie. SQLite confirmó una sola CartItem CAM-BAS-S-NEGRO quantity=3 para el token probado. M/Negro agotada mostró CTA ausente y POST directo devolvió 409 sin CartItem.",
+      "QA responsive: 390x844 y 1280x800 sin overflow horizontal; labels, foco, targets táctiles y status/alert visibles. En una navegación limpia la consola solo mostró el mensaje informativo de React DevTools y todas las peticiones fueron 200. Capturas: /tmp/cart-add-390.png y /tmp/cart-add-1280.png.",
+      "git diff --check -> exit 0; revisión estática confirma ausencia de localStorage, token en JSON, secretos, mutación de stock, auth, checkout y cambios de schema/seed/dependencias.",
+      "2026-10-12: validación independiente feature-validator accept tras reparación Int32; 42 tests focalizados, gate 169 tests, overflow concurrente 200/400 sin mutación indebida, QA 390x844/1280x800."
+    ],
+    "notes": "Implementada y auto-verificada; queda lista para feature-validator, que debe decidir la aceptación independiente. Quantity está acotada a 1..2_147_483_647 (Int32) y el overflow inicial o acumulado devuelve 400 sin mutar el carrito. El carrito persiste para invitados en SQLite mediante cookie HTTP-only; no reserva ni descuenta stock y checkout debe revalidarlo."
   },
   {
     "id": "cart-manage",
     "area": "cart",
     "title": "Página de carrito y gestión de cantidades",
     "user_visible_behavior": "El usuario ve los ítems del carrito, ajusta cantidades y elimina ítems.",
-    "depends_on": ["cart-add"],
+    "depends_on": [
+      "cart-add"
+    ],
     "status": "not_started",
     "verification": [
       "La página de carrito lista los ítems con variante, precio y cantidad.",
@@ -274,7 +311,9 @@
     "area": "checkout",
     "title": "Revisión del checkout y datos de contacto/envío",
     "user_visible_behavior": "El usuario revisa el carrito y completa sus datos de contacto y envío antes de pagar.",
-    "depends_on": ["cart-manage"],
+    "depends_on": [
+      "cart-manage"
+    ],
     "status": "not_started",
     "verification": [
       "El checkout muestra el resumen del carrito y un formulario de contacto/envío.",
@@ -289,7 +328,9 @@
     "area": "checkout",
     "title": "Creación de usuario en el checkout",
     "user_visible_behavior": "Al pagar, el usuario crea su cuenta (email + contraseña) y queda autenticado con sesión.",
-    "depends_on": ["checkout-review"],
+    "depends_on": [
+      "checkout-review"
+    ],
     "status": "not_started",
     "verification": [
       "Al confirmar los datos se crea el usuario y se inicia sesión (cookie).",
@@ -304,7 +345,9 @@
     "area": "checkout",
     "title": "Pago simulado y creación del pedido",
     "user_visible_behavior": "El usuario paga con una pasarela simulada; el resultado (aprobado/rechazado) crea el pedido con el estado correcto.",
-    "depends_on": ["checkout-user"],
+    "depends_on": [
+      "checkout-user"
+    ],
     "status": "not_started",
     "verification": [
       "Pago aprobado crea un pedido en estado Pagado vinculado al usuario.",
@@ -319,7 +362,9 @@
     "area": "orders",
     "title": "Listado de pedidos del usuario",
     "user_visible_behavior": "El usuario registrado ve la lista de sus pedidos con estado.",
-    "depends_on": ["checkout-payment"],
+    "depends_on": [
+      "checkout-payment"
+    ],
     "status": "not_started",
     "verification": [
       "Un usuario registrado ve sus pedidos con estado tras una compra.",
@@ -333,7 +378,9 @@
     "area": "orders",
     "title": "Detalle de un pedido",
     "user_visible_behavior": "El usuario ve el detalle de un pedido con sus líneas (variante + cantidad) y estado.",
-    "depends_on": ["orders-list"],
+    "depends_on": [
+      "orders-list"
+    ],
     "status": "not_started",
     "verification": [
       "El detalle de pedido muestra las líneas (variante, cantidad, precio) y el estado.",
@@ -347,7 +394,9 @@
     "area": "orders",
     "title": "Control de acceso a pedidos",
     "user_visible_behavior": "Un invitado no puede ver pedidos y un usuario solo ve los suyos.",
-    "depends_on": ["orders-list"],
+    "depends_on": [
+      "orders-list"
+    ],
     "status": "not_started",
     "verification": [
       "Un invitado que intenta ver pedidos es bloqueado o redirigido al checkout.",

@@ -198,6 +198,12 @@ describe("ProductDetail", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Disponible · 5 unidades",
     );
+    expect(
+      screen.getByRole("form", { name: "Añadir al carrito" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Añadir al carrito" }),
+    ).toBeEnabled();
     expect(screen.getByRole("radio", { name: "XL" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Azul" })).toBeChecked();
   });
@@ -223,6 +229,9 @@ describe("ProductDetail", () => {
     expect(
       screen.getByRole("radio", { name: /Negro.*Agotada/u }),
     ).toBeDisabled();
+    expect(
+      screen.queryByRole("form", { name: "Añadir al carrito" }),
+    ).not.toBeInTheDocument();
   });
 
   it("explains partial and nonexistent combinations without stock", () => {
@@ -257,6 +266,9 @@ describe("ProductDetail", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Esa combinación de talla y color no existe.",
     );
+    expect(
+      screen.queryByRole("form", { name: "Añadir al carrito" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "S" })).toBeEnabled();
     expect(screen.getByRole("radio", { name: "Azul" })).toBeEnabled();
   });
