@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `order-access-control` con `feature-spec`
+- Siguiente paso: backlog completado; no quedan features pendientes en `feature_list.json`.
 - Bloqueador actual: ninguno
-- Última verificación: `orders-detail` aceptada por validator independiente (2026-10-12); gate274 tests y QA390×844/1280×800.
+- Última verificación: `order-access-control` aceptada por validator independiente (2026-10-12); gate279 tests, smoke adversarial independiente y QA390×844/1280×800.
 
 ## Registro de sesión
 
@@ -489,3 +489,30 @@
 - Validator: **ACCEPT**;22 tests focales, lint/typecheck/diff-check OK. Gate274 tests y capturas390/1280 revisadas.
 - Confirmó snapshots, consulta id+userId, sesión antes de servicio, 404 común y suma segura; sin findings de seguridad/alcance/docs.
 - Estado:`accepted`. Siguiente:`order-access-control`.
+
+### Sesión 024 — `order-access-control`
+
+- Fecha: 2026-10-12
+- Objetivo: cerrar con evidencia adversarial el aislamiento de pedidos y el requisito de sesión en páginas y pago, conservando el contrato `auth_session` existente.
+- Completado:
+  - Añadidas regresiones server-side para comprobar lookup por hash SHA-256, expiración exacta (`expiresAt <= now`) y revocación por hash sin persistir el token crudo.
+  - Ampliadas las pruebas de `POST /api/checkout/payment` para cookie ausente/desconocida/caducada/revocada y `userId` inyectado; todas bloquean antes de `processPayment` y devuelven `no-store`.
+  - Añadido `scripts/verify-order-access-control.mjs`, smoke reproducible con SQLite bajo `/tmp`, dos usuarios/sesiones/pedidos, `next start` hijo propio, lista/detalle/RSC/pago/logout/cambio de cookie/404 común y cleanup recuperable con `trash`; nunca usa `dev.db` ni imprime tokens/PII.
+  - No se cambiaron páginas, servicio de pedidos, schema, migraciones, dependencias ni contrato de API; las guardias owner-scoped existentes quedaron cubiertas por regresiones y smoke.
+- Verificación ejecutada y evidencia:
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec vitest run src/lib/server/auth.test.ts src/app/api/checkout/payment/route.test.ts` -> exit 0 (2 archivos, 14 tests).
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec node scripts/verify-order-access-control.mjs` -> exit 0 contra `http://127.0.0.1:<puerto>` con SQLite temporal `/tmp/verify-order-access-control-mTerqe/orders.db`: guest/unknown/expired/revoked recibieron `307 → /checkout` o `401`; A/B quedaron aislados; foreign/missing compartieron `404`; RSC y HTML respetaron el cambio de cookie; `userId` inyectado y sesiones inválidas no crearon pedidos; pago válido creó exactamente uno; logout revocó el token antiguo; cabeceras privadas `private/no-store`; servidor propio detenido y directorio movido a Trash en `finally`.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` -> exit 0 con Node v22.23.2/pnpm 10.18.3, db:setup/db:verify, lint, typecheck, 41 archivos/279 tests y build.
+  - `PATH=/opt/homebrew/opt/node@22/bin:$PATH node --check scripts/verify-order-access-control.mjs` y `git diff --check` -> exit 0.
+  - QA Chrome DevTools MCP en `http://localhost:4597` con servidor/DB propios: emulación exacta `390x844x1,mobile,touch` y `1280x800`; invitado recibió `307 -> /checkout`; A solo vio su lista y detalle; pedido ajeno e inexistente no mostraron detalle; logout y recarga con el token antiguo redirigieron a checkout; tras cambiar la cookie B solo vio sus pedidos. No hubo overflow, errores de consola ni respuestas 5xx. Capturas revisadas: `/tmp/order-access-control-qa-390-list.png`, `/tmp/order-access-control-qa-390-detail.png`, `/tmp/order-access-control-qa-1280-list.png`, `/tmp/order-access-control-qa-1280-detail.png`. Servidor detenido y DB/driver temporales movidos a Trash.
+- Estado: `order-access-control` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo o cuestión no resuelta: no hubo cambio visual ni riesgos nuevos tras la QA Chrome; queda pendiente únicamente la validación independiente/aceptación del validator.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `order-access-control` y conservar este smoke como evidencia de regresión.
+
+### Aceptación independiente — `order-access-control` y cierre del backlog
+
+- Validator: **ACCEPT definitivo**. Repitió22 tests focales, lint/typecheck/node --check/diff-check y smoke adversarial SQLite/next start propio; cleanupTrash y proceso terminado confirmados. Revisó4 capturas390/1280 y gate279 tests/build. Sin findings.
+- Estado:`accepted`. No quedan features pendientes:19 entradas accepted en `feature_list.json`.
+- Las8 pendientes de esta sesión pasaron planner→implementer→validator: `cart-add`, `cart-manage`, `checkout-review`, `checkout-user`, `checkout-payment`, `orders-list`, `orders-detail` y `order-access-control`. Cada aceptación tiene su commit local.
+- Se corrigió la nota obsoleta de `cart-add` para reflejar su aceptación independiente ya registrada.
+- Prueba local: `pnpm dev` → catálogo → carrito → checkout con cuenta → pago simulado → Mis pedidos → Ver detalle. Verificación repetible: `CI=true ./init.sh`; tras build, `pnpm exec node scripts/verify-order-access-control.mjs`.

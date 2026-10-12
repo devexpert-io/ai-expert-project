@@ -91,13 +91,24 @@ describe("POST /api/checkout/payment", () => {
   });
 
   it("requires a valid session and closed body/header/origin", async () => {
-    getSessionUser.mockResolvedValueOnce(null);
-    await expect(POST(request({ outcome: "approved" }))).resolves.toHaveProperty("status", 401);
+    for (const label of ["missing", "unknown", "expired", "revoked"]) {
+      cookieStore.get.mockReturnValueOnce(
+        label === "missing" ? undefined : { value: `opaque-${label}` },
+      );
+      getSessionUser.mockResolvedValueOnce(null);
+      const response = await POST(request({ outcome: "approved" }));
+
+      expect(response.status, label).toBe(401);
+      expect(response.headers.get("Cache-Control"), label).toBe("no-store");
+    }
     expect(processPayment).not.toHaveBeenCalled();
 
     getSessionUser.mockResolvedValue({ id: "user-1" });
     await expect(
       POST(request({ outcome: "approved", totalCents: 3980 })),
+    ).resolves.toHaveProperty("status", 400);
+    await expect(
+      POST(request({ outcome: "approved", userId: "user-2" })),
     ).resolves.toHaveProperty("status", 400);
     await expect(
       POST(request({ outcome: "approved" }, { key: "has space" })),
