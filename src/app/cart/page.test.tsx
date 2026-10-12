@@ -67,6 +67,9 @@ describe("CartPage", () => {
       "href",
       "/",
     );
+    expect(
+      screen.queryByRole("link", { name: "Continuar al checkout" }),
+    ).not.toBeInTheDocument();
     expect(getGuestCart).not.toHaveBeenCalled();
   });
 
@@ -82,6 +85,10 @@ describe("CartPage", () => {
     expect(screen.getByText(/39,80/u)).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Resumen del carrito" })).toHaveTextContent(
       /64,70/u,
+    );
+    expect(screen.getByRole("link", { name: "Continuar al checkout" })).toHaveAttribute(
+      "href",
+      "/checkout",
     );
     expect(screen.getAllByRole("link", { name: "Ver Camiseta básica" })[0]).toHaveAttribute(
       "href",

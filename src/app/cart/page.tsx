@@ -121,6 +121,9 @@ export default async function CartPage() {
             <p className={styles.summaryNote}>
               Impuestos incluidos · Envío calculado más adelante
             </p>
+            <Link className={styles.checkoutLink} href="/checkout">
+              Continuar al checkout
+            </Link>
           </aside>
         </div>
       )}

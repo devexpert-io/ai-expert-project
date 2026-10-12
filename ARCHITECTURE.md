@@ -70,6 +70,21 @@ precios y sumas se calculan desde `Variant.priceCents` con enteros seguros. La i
 mutación correcta; el estado del carrito no se copia a `localStorage` ni reserva
 stock.
 
+`/checkout` mantiene la misma frontera: el Server Component lee `cart_guest_token`
+con `cookies()` y llama a `getGuestCart`, por lo que precios, cantidades y
+subtotales llegan únicamente del `CartView` calculado desde `Variant.priceCents`.
+Sin cookie o sin líneas solo se renderiza el estado vacío; no se crea carrito,
+cookie, usuario ni formulario accionable. Con líneas se entrega un resumen plano
+y la isla `CheckoutForm`.
+
+`CheckoutForm` empieza con valores vacíos para evitar PII en el HTML de SSR y
+rehidrata en `useEffect` solo un objeto cerrado válido de
+`sessionStorage["checkout_draft_v1"]`. El contrato contiene exactamente `name`,
+`email`, `phone` y `shippingAddress`; normaliza espacios, valida límites y email
+antes de escribir. Guardar el borrador no hace fetch ni navegación y no escribe
+SQLite, cookies, URL, logs ni una API. Crear cuenta, asociar el carrito,
+revalidar stock y cobrar pertenecen a los slices posteriores.
+
 ## Decisions
 
 - **ORM**: Prisma (v6) con SQLite, decisión tomada en `bootstrap-stack`. `DATABASE_URL="file:./dev.db"`. Alternativa evaluada: Drizzle; descartada por familiaridad y tooling de migraciones integrado de Prisma.
