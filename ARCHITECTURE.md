@@ -116,6 +116,16 @@ expira el token invitado después del merge y nunca lo incluye en JSON. Un email
 duplicado, credencial inválida, sesión activa o suma que excede el Int32 devuelven
 mensajes constantes sin hash, contraseña, token, userId ni datos de Prisma.
 
+`/orders` es un Server Component dinámico protegido por `auth_session`: lee la
+cookie HTTP-only y deriva el `userId` exclusivamente con `getSessionUser`. Sin
+cookie o con una sesión inválida redirige a `/checkout` antes de consultar
+`Order`. `src/lib/server/orders.ts` usa `findMany` con `where: { userId }`,
+orden estable `createdAt DESC, id DESC` y un `select` mínimo de `id`, `status`,
+`totalCents` y `createdAt`. La página traduce solo `PAID`, `CANCELLED` y
+`PENDING_PAYMENT`, omite estados desconocidos y entrega una vista sin líneas,
+identificadores visibles, `userId` ni PII; no existe API pública ni enlace de
+detalle en este slice.
+
 ## Decisions
 
 - **ORM**: Prisma (v6) con SQLite, decisión tomada en `bootstrap-stack`. `DATABASE_URL="file:./dev.db"`. Alternativa evaluada: Drizzle; descartada por familiaridad y tooling de migraciones integrado de Prisma.

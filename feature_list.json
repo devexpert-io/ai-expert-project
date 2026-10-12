@@ -405,13 +405,23 @@
     "depends_on": [
       "checkout-payment"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Un usuario registrado ve sus pedidos con estado tras una compra.",
       "La lista solo muestra pedidos del usuario autenticado."
     ],
-    "evidence": [],
-    "notes": "Pantalla 'mis pedidos' en DESIGN.md y slice MVP en build-brief.md."
+    "evidence": [
+      "Implementados src/lib/server/orders.ts y src/app/orders/page.tsx: sesión auth_session resuelta con getSessionUser, redirección a /checkout antes de consultar pedidos, findMany filtrado por userId con select mínimo id/status/totalCents/createdAt y orden createdAt DESC + id DESC; estados desconocidos omitidos con mapa cerrado.",
+      "Añadidos src/lib/server/orders.test.ts y src/app/orders/page.test.tsx: aislamiento de propietario, select sin userId/lines, orden, guardia sin cookie/sesión inválida, PAID/CANCELLED/PENDING_PAYMENT, formato EUR/es-ES Europe/Madrid, vacío, no IDs/PII y claves heredadas no soportadas.",
+      "Prueba focal `PATH=/opt/homebrew/opt/node@22/bin:$PATH pnpm exec vitest run src/lib/server/orders.test.ts src/app/orders/page.test.tsx` -> 2 archivos/6 tests passing.",
+      "Header compartido actualizado con enlace Mis pedidos a /orders; orders-page.module.css y globals.css mantienen foco visible, wrap móvil y todos los anchors del header (wordmark, navegación y utilidades) con targets de 44px sin overflow.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh -> exit 0 con Node v22.23.2/pnpm 10.18.3, db:setup/db:verify, lint, typecheck, 39 archivos y 258 tests, build con /orders dinámica. Log final tras la reparación de targets: /tmp/ai-expert-orders-list-gate-20261012-final-repair.log.",
+      "Smoke SQLite temporal /tmp/ai-expert-orders-list-20261012.db con dos usuarios, sesiones reales, tres estados y estado desconocido para A y pedido distinto para B: invitado 307 a /checkout; A recibió solo tres pedidos propios y B solo su total 777,00 EUR; DB temporal eliminada de forma recuperable tras la prueba.",
+      "QA Chrome DevTools MCP en http://127.0.0.1:4468/orders sobre servidor propio detenido al terminar: emulación exacta 390x844x1 mobile/touch y 1280x800, scrollWidth=clientWidth, todos los anchors visibles del header midieron minHeight=44px con foco visible (wordmark, navegación y utilidades), lista/estados/fechas/header visibles, GET/CSS/chunks/icon 200 y consola solo info React DevTools. Capturas revisadas: /tmp/orders-list-repair-390.png y /tmp/orders-list-repair-1280.png.",
+      "git diff --check -> exit 0; SHA base de trabajo 090c109179ed1f8d4ad929a1b2f1ad33abd2cf52; documentación durable actualizada en ARCHITECTURE.md, CONSTRAINTS.md, docs/domain-model.md y docs/technical-discovery.md.",
+      "2026-10-12: validator independiente ACCEPT después del ajuste de targets44px del header. Focal6 tests y diff-check OK; gate258 tests, screenshots390/1280 revisadas; además verificó empty en navegador, invitado307checkout y filtro por propietario/selectmínimo/estados cerrados."
+    ],
+    "notes": "Aceptada por validator independiente el 2026-10-12; listado propio y navegación responsive."
   },
   {
     "id": "orders-detail",

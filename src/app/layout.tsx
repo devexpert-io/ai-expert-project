@@ -27,6 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/#catalog-filters-title">Filtrar</Link>
             <Link href="/#catalog-results">Edición 01</Link>
             <Link href="/cart">Carrito</Link>
+            <Link href="/orders">Mis pedidos</Link>
           </nav>
         </header>
         {children}

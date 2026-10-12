@@ -49,6 +49,7 @@ Foto usuario + Producto/Variante ──> Imagen try-on
 5. **Chatbot**: el usuario pregunta; el sistema responde usando contexto del catálogo y puede recomendar una variante/producto.
 6. **Try-on**: el usuario sube una foto en el detalle; el sistema genera la prenda puesta sobre la foto y devuelve la imagen.
 7. **Cuenta en checkout**: invitado con borrador y carrito se registra o inicia sesión; el carrito se asocia/fusiona, el token invitado se revoca y las siguientes lecturas usan `userId`.
+8. **Historial de pedidos**: una sesión válida abre «Mis pedidos» y recibe solo sus pedidos, ordenados del más reciente al más antiguo, con estado, total y fecha; el detalle queda para otra feature.
 
 ## Edge Cases
 
