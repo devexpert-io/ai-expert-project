@@ -42,7 +42,13 @@
 
 - **Try-on realista** (alto): resultado poco fiel o rechazo del endpoint de edición de imagen; mitigar con proveedor/modelo configurable y expectativas acotadas.
 - **Cupo semanal de IA**: uso limitado por clave y por semana; peticiones rechazadas al 100%. Mitigar con modos sin clave, mensajes claros y evitando abusos.
-- **Stock entre carrito y checkout** (medio): el alta comprueba `stock > 0`, pero no reserva ni descuenta unidades y permite acumular intención por encima del stock vigente. Mitigar revalidando las cantidades en `cart-manage`/checkout antes de cobrar.
+- **Stock entre carrito y checkout** (resuelto en `checkout-payment`): el carrito
+  no reserva ni descuenta y puede quedar obsoleto; el pago relee stock/precio en
+  servidor, serializa la fila del carrito y hace decrementos condicionales en la
+  misma transacción que el pedido. Un cambio devuelve `409` sin crear pedido.
+- **Idempotencia de pago** (resuelto en `checkout-payment`): la clave cruda no se
+  persiste; su hash único por usuario evita duplicados por doble click, pérdida de
+  respuesta y concurrencia. Reusar una clave devuelve el outcome original.
 - **Privacidad**: la foto del usuario viaja a `inference.devexpert.io` en
   `tryon-result`; mitigado con aviso + consentimiento revalidado en servidor y
   sin persistir foto ni resultado. La calidad visual realista sigue siendo un

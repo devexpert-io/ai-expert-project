@@ -32,14 +32,18 @@ Foto usuario + Producto/Variante ──> Imagen try-on
 - **Variante**: `Disponible` (stock > 0) / `Agotada` (stock = 0).
 - **Carrito**: estado volátil persistente; sus ítems consultan stock vigente al llegar al checkout.
 - **Sesión**: `Activa` hasta `expiresAt` o logout; revocar elimina la fila y expira `auth_session`.
-- **Pago**: `Pendiente` → (`Aprobado` | `Rechazado`).
-- **Pedido**: `Pendiente pago` → (`Pagado` | `Cancelado`). Por confirmar si hay más estados (enviado/entregado) fuera del MVP.
+- **Pago**: `Pendiente` → (`Aprobado` | `Rechazado`). En el simulador el outcome
+  se decide explícitamente, sin aleatoriedad ni dinero real.
+- **Pedido**: `Pendiente pago` → (`Pagado` | `Cancelado`). Un rechazo persiste
+  `CANCELLED` y conserva el carrito para reintentar; estados de envío quedan fuera
+  del MVP.
 - **Try-on**: `Solicitado` → (`Generado` | `Error`).
 
 ## Important Scenarios
 
 1. **Compra completa**: invitado navega → añade variante al carrito → va al checkout → introduce datos → crea usuario → pago simulado aprobado → se crea pedido `Pagado` vinculado al usuario.
-2. **Pago rechazado**: el usuario sigue en el checkout; el pedido queda `Pendiente`/`Cancelado` y puede reintentar.
+2. **Pago rechazado**: el usuario sigue en el checkout; el pedido queda `CANCELLED`,
+   stock y carrito se conservan y una nueva clave permite reintentar.
 3. **Invitado sin cuenta**: puede llegar a la puerta del checkout, pero no se materializa pedido hasta crear usuario.
 4. **Catalogo filtrado/ordenado**: selección de categoría/talla/color/precio + orden temporal; no cambia datos.
 5. **Chatbot**: el usuario pregunta; el sistema responde usando contexto del catálogo y puede recomendar una variante/producto.
@@ -54,5 +58,7 @@ Foto usuario + Producto/Variante ──> Imagen try-on
 - Carrito de invitado que luego crea cuenta: el carrito persiste y se asocia al nuevo usuario.
 - Try-on con imagen no válida o fallo del proveedor: mostrar error controlado, no romper la página.
 - Intento de crear pedido sin sesión: bloqueado/redirigido a checkout.
+- Repetir una misma `Idempotency-Key` devuelve el mismo pedido y total sin crear
+  otra línea ni descontar stock; otra clave representa un intento nuevo.
 - Sesión válida intentando cambiar de cuenta sin logout: rechazado con `409` y sin tocar carrito o contacto.
 - Merge de líneas que supera `2_147_483_647`: rechazado de forma atómica; ambos carritos y la sesión permanecen como estaban.

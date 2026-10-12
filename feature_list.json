@@ -375,14 +375,27 @@
     "depends_on": [
       "checkout-user"
     ],
-    "status": "not_started",
+    "status": "accepted",
     "verification": [
       "Pago aprobado crea un pedido en estado Pagado vinculado al usuario.",
       "Pago rechazado deja el pedido Pendiente/Cancelado y permite reintentar.",
       "El checkout valida el stock vigente antes de pagar."
     ],
-    "evidence": [],
-    "notes": "Estados Pago Pendiente→Aprobado|Rechazado y Pedido Pendiente pago→Pagado|Cancelado en domain-model.md. Edge cases: stock cambiado entre carrito y pago."
+    "evidence": [
+      "Implementados prisma/migrations/20261012133000_checkout_payment, Order.idempotencyKeyHash nullable con índice único compuesto por userId/hash, seed que preserva stock de variantes existentes y verify-seed tolerante a ventas previas.",
+      "Servicio server-only src/lib/server/payment.ts: precios/nombres/cantidades actuales del servidor, snapshots Order/OrderLine, PAID con decremento condicional y limpieza atómica del carrito, CANCELLED conserva stock/carrito, replay por usuario/hash y reintentos SQLite; ruta POST /api/checkout/payment exige sesión, Origin/content-type/body limit, outcome cerrado e Idempotency-Key y no expone secretos.",
+      "SimulatedPayment integrado tras autenticación: aviso fijo de simulación, outcomes deterministas, retry con clave nueva después de rechazo y sin persistencia cliente. Documentación durable actualizada en ARCHITECTURE.md, CONSTRAINTS.md, docs/domain-model.md, docs/technical-discovery.md y docs/risks-and-open-questions.md.",
+      "PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh -> exit 0 con Node v22.23.2/pnpm 10.18.3; db:setup/db:verify, lint, typecheck, 37 archivos y 252 tests, build con /api/checkout/payment. Log: /tmp/ai-expert-checkout-payment-gate-20261012.log.",
+      "Smoke aislado http://localhost:4369 con DATABASE_URL=file:/tmp/ai-expert-checkout-payment-20261012.db: aprobado creó PAID con snapshot y total server-owned, descontó stock y vació carrito; mismo key replayó sin duplicar; rechazado creó CANCELLED conservando stock/carrito; nueva clave aprobó retry; sesión ausente=401; stock stale=409 con carrito intacto.",
+      "Concurrencia real: dos usuarios sobre la última unidad dieron exactamente un 200 PAID y un 409, stock final 0 y un pedido. Misma Idempotency-Key en paralelo con outcomes distintos devolvió a ambos el mismo PAID/orderId, un único pedido, carrito vacío y stock 10->9.",
+      "Reejecutar db:setup en la DB temporal mantuvo una variante vendida en stock 0; db:verify pasó con disponibles=22, agotadas=2 y 4 pedidos. git diff --check -> exit 0; JSON sin claves duplicadas.",
+      "QA Chrome DevTools MCP /checkout a 390x844 y 1280x800: scrollWidth=clientWidth, aviso de no cobro, aprobado y rechazo CANCELLED con retry; consola solo info de React DevTools y POST de pago 200. Capturas vigentes: /tmp/checkout-payment-repair-success-390.png, /tmp/checkout-payment-repair-success-1280.png, /tmp/checkout-payment-repair-rejected-390.png.",
+      "Reparación validator: CheckoutForm ya no afirma que no se crea un pedido; Reintentar pago limpia el cancelado, abre el selector y permite rechazo→aprobar→PAID sin recarga, generando una nueva clave. Regresión UI cubre el body aprobado y key nueva; retry de red conserva la key.",
+      "Gate de reparación `PATH=/opt/homebrew/opt/node@22/bin:$PATH CI=true ./init.sh` -> exit 0 con Node v22.23.2/pnpm 10.18.3, 37 archivos/252 tests y build. Log: /tmp/ai-expert-checkout-payment-gate-20261012-repair.log.",
+      "QA reparado en servidor aislado http://localhost:4379/checkout: 390x844 mostró CANCELLED, Reintentar, selector y PAID sin reload; 1280x800 mostró PAID visible en sesión desktop independiente; ambas sin overflow, consola solo React DevTools info y POST 200. Capturas: /tmp/checkout-payment-repair-rejected-390.png, /tmp/checkout-payment-repair-retry-390.png, /tmp/checkout-payment-repair-success-390.png, /tmp/checkout-payment-repair-success-1280.png.",
+      "2026-10-12: validator independiente ACCEPT tras reparación; 9 tests focales, lint/typecheck/diff-check OK, gate252 tests y capturas390/1280 revisadas. Confirma reintento CANCELLED→selección approved→PAID con nueva clave y retry de red con misma clave, más evidencia válida de transacciones/concurrencia/seed."
+    ],
+    "notes": "Aceptada por validator independiente el 2026-10-12. El simulador no integra una pasarela externa."
   },
   {
     "id": "orders-list",

@@ -56,6 +56,16 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 ### Pasarela de pago
 - Simulada internamente. Sin integración de terceros en el MVP.
+- `POST /api/checkout/payment` exige una sesión válida, `Idempotency-Key` ASCII
+  acotada y `{ outcome: "approved" | "rejected" }` sin campos adicionales; todas
+  las respuestas son `no-store` y no devuelven userId, token, precios enviados por
+  el navegador ni datos de Prisma.
+- El servicio relee en SQLite el `Cart.userId`, las cantidades y el precio/stock de
+  cada `Variant`, y crea en la misma transacción un `Order` y sus `OrderLine` con
+  snapshots. `approved` usa decrementos condicionales y elimina el carrito;
+  `rejected` crea `CANCELLED` y conserva carrito/stock. El hash SHA-256 de la
+  clave queda en `Order.idempotencyKeyHash` con unicidad por usuario para replay y
+  concurrencia. Las claves nuevas permiten reintentar un rechazo.
 
 ## Authentication and Authorization
 
@@ -96,7 +106,23 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
   de credenciales se mantienen genéricos.
 - La identidad del carrito es una unión de `guestToken`/`userId` en
   `src/lib/server/cart.ts`; con sesión se prioriza el usuario y no se emite una
-  cookie invitada nueva. Pago, pedidos y stock siguen fuera de este slice.
+  cookie invitada nueva. `POST /api/checkout/payment` es el único consumidor de
+  pago/stock: relee la identidad y las variantes en servidor, crea snapshots y
+  aplica las transiciones atómicas descritas arriba.
+
+### Contrato implementado de pago simulado (`checkout-payment`)
+
+- `src/lib/payment.ts` valida el contrato cerrado y la clave ASCII; la ruta Node
+  valida Origin, JSON, límite de cuerpo y sesión antes de delegar en
+  `src/lib/server/payment.ts`.
+- `Order.idempotencyKeyHash` nullable permite conservar pedidos previos a este
+  slice. La combinación `(userId, idempotencyKeyHash)` es única; el servicio
+  resuelve primero un replay, serializa la fila del carrito y reintenta conflictos
+  SQLite acotados.
+- `CheckoutForm` monta `SimulatedPayment` solo con sesión. La UI muestra el aviso
+  «Pago simulado — no se ha realizado ningún cargo», conserva la clave para un
+  reintento de red, crea otra después de `CANCELLED`, y no guarda clave ni resultado
+  en `sessionStorage`.
 
 ## Contrato implementado del carrito anónimo (`cart-add`)
 

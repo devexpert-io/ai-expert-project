@@ -170,7 +170,6 @@ async function seed() {
           update: {
             size: variant.size,
             color: variant.color,
-            stock: variant.stock,
             priceCents: variant.priceCents,
             product: { connect: { id: product.id } },
           },

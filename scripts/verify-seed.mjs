@@ -148,8 +148,11 @@ async function verify() {
       `El producto ${product.slug} no tiene variantes.`,
     );
   }
-  check(availableVariants > 0, "Debe existir al menos una variante disponible.");
-  check(soldOutVariants > 0, "Debe existir al menos una variante agotada.");
+  const orderCount = await prisma.order.count();
+  if (orderCount === 0) {
+    check(availableVariants > 0, "Debe existir al menos una variante disponible.");
+    check(soldOutVariants > 0, "Debe existir al menos una variante agotada.");
+  }
 
   if (failures.length > 0) {
     throw new Error(`Verificación fallida:\n- ${failures.join("\n- ")}`);

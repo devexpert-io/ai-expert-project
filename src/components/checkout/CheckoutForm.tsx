@@ -17,6 +17,7 @@ import {
   type CheckoutDraftField,
   validateCheckoutDraft,
 } from "../../lib/checkout";
+import { SimulatedPayment } from "./SimulatedPayment";
 
 import styles from "./checkout-form.module.css";
 
@@ -225,8 +226,7 @@ export function CheckoutForm({ authenticated = false }: CheckoutFormProps) {
   return (
     <form className={styles.form} noValidate onSubmit={handleAuthSubmit}>
       <p className={styles.note}>
-        Guarda estos datos para retomarlos durante el checkout. No se hace
-        ningún cobro ni se crea un pedido en este paso.
+        Guarda estos datos para retomarlos durante el checkout.
       </p>
       {hasErrors ? (
         <p aria-live="assertive" className={styles.alert} role="alert">
@@ -248,6 +248,8 @@ export function CheckoutForm({ authenticated = false }: CheckoutFormProps) {
           </button>
         </div>
       ) : null}
+
+      {isAuthenticated ? <SimulatedPayment /> : null}
 
       <div className={styles.fields}>
         {FIELD_DEFINITIONS.map((definition) => {
