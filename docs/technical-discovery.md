@@ -95,6 +95,24 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
   y devuelve `400` antes de escribir si la suma de una línea desbordaría ese máximo.
   No devuelve precios ni datos de Prisma, no reserva stock y no crea usuarios.
 
+## Contrato implementado de gestión del carrito (`cart-manage`)
+
+- `/cart` lee `cart_guest_token` en un Server Component. Sin cookie o sin fila
+  asociada devuelve un estado vacío sin crear identidad. Con cookie devuelve un
+  snapshot plano ordenado de forma estable con producto, slug, imagen, talla,
+  color, precio unitario, cantidad, subtotal de línea, `itemCount` y
+  `subtotalCents`, calculados desde `Variant.priceCents`.
+- `PATCH /api/cart/items` recibe exactamente `{ variantId, quantity }` y
+  `DELETE /api/cart/items` exactamente `{ variantId }`; ambos mantienen el límite
+  efectivo de 8 KiB, validan `Origin` y `Content-Type`, responden `no-store` y
+  requieren una cookie existente. Una línea ausente devuelve `404`; cantidades
+  inválidas devuelven `400`; ningún handler emite `Set-Cookie` ni crea `Cart`.
+- Las mutaciones son transacciones Prisma que actualizan o eliminan la línea
+  `(cartId, variantId)`, conservan una fila `Cart` vacía y devuelven el snapshot
+  recalculado. No consultan ni reservan stock: la revalidación corresponde al
+  checkout. La UI refresca el Server Component tras un éxito y no usa
+  `localStorage`.
+
 ## Observability
 
 - Logs claros en el flujo de pago y de los errores de las APIs de IA (sin exponer claves).

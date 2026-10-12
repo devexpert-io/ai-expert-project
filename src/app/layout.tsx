@@ -26,6 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <nav aria-label="Atajos del catálogo" className="site-utilities">
             <Link href="/#catalog-filters-title">Filtrar</Link>
             <Link href="/#catalog-results">Edición 01</Link>
+            <Link href="/cart">Carrito</Link>
           </nav>
         </header>
         {children}

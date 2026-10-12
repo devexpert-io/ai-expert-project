@@ -6,9 +6,9 @@
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `cart-manage` con `feature-spec`
+- Siguiente paso: planificar `checkout-review` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `cart-add` aceptada por validator independiente (2026-10-12); gate completo 169 tests y navegador 390×844/1280×800.
+- Última verificación: `cart-manage` aceptada por validator independiente (2026-10-12); gate completo 202 tests y navegador390×844/1280×800.
 
 ## Registro de sesión
 
@@ -321,3 +321,28 @@
 - Verificación independiente: 42 tests focalizados; gate post-fix inspeccionado (169 tests); endpoint concurrente sobre max−1 dio 200/400 y fila final max; agregado de dos líneas max correcto.
 - UI validada a 390×844 y 1280×800 en localhost:4317 sobre cambios de esta feature; aceptación antes del commit.
 - Estado: `cart-add` accepted. Siguiente: `cart-manage`.
+
+### Sesión 018 — `cart-manage`
+
+- Fecha: 2026-10-12
+- Objetivo: crear `/cart` para leer el carrito de invitado, ajustar cantidades y eliminar líneas conservando totales exactos y la cookie existente.
+- Completado:
+  - `src/lib/cart.ts`: `CartView`, líneas planas y parsers cerrados para PATCH/DELETE con límite Int32.
+  - `src/lib/server/cart.ts`: lectura server-only y mutaciones transaccionales por `guestToken`; precios desde `Variant.priceCents`, subtotales enteros seguros y Cart vacío conservado.
+  - `src/app/api/cart/items/route.ts`: PATCH/DELETE con Origin, cuerpo ≤8 KiB, `no-store`, 400/404/500 seguros y sin emitir cookie nueva; POST existente preservado.
+  - `src/app/cart/page.tsx` + estilos: estado vacío, líneas enlazables con talla/color, resumen, cantidad y eliminación; `CartItemControls` accesible usa `credentials: same-origin` y `router.refresh()`.
+  - Header global con «Carrito» y documentación durable actualizada en `ARCHITECTURE.md`, `CONSTRAINTS.md` y `docs/technical-discovery.md`.
+- Verificación ejecutada y evidencia:
+  - `CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3; `db:setup`, `db:verify`, lint, typecheck, 26 archivos y 202 tests, build incluyendo `/cart`. Log: `/tmp/ai-expert-cart-manage-gate-20261012.log`.
+  - `git diff --check` → exit 0; sin cambios de schema/seed/dependencias, checkout, auth, stock ni `localStorage`.
+  - Smoke API con helper MCP y servidor propio `http://localhost:4347`: POST 200 creó dos líneas; PATCH 200 `2→5` devolvió `lineTotalCents=9950` y `subtotalCents=9950`; DELETE 200 dejó snapshot vacío; línea ausente 404; cantidad `0` 400. Todas las respuestas `Cache-Control: no-store`; no hubo `Set-Cookie` en PATCH/DELETE.
+  - Smoke UI en `/cart`: 390×844 y 1280×800; enlace global visible, subtotal 120,40 € tras actualización, eliminación dejó una línea a 20,90 €, `scrollWidth` igual al viewport. Capturas: `/tmp/cart-manage-390.png` y `/tmp/cart-manage-1280.png`. Navegación normal: solo mensaje informativo de React DevTools, sin errores ni peticiones fallidas.
+- Estado: `cart-manage` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo: el carrito conserva cantidades aunque cambie el stock; checkout debe revalidar disponibilidad antes de cobrar.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `cart-manage`.
+
+### Aceptación independiente — `cart-manage`
+
+- Fecha:2026-10-12. Validator:`accept`; 67 tests focalizados, gate202 tests y QA390×844/1280×800 verificados.
+- Smoke aislado localhost:4348: vacío sin cookie, dos líneas60,70€, PATCH120,40€, DELETE y errores400/404; no-store/sin Set-Cookie. JSON con claves únicas.
+- Estado:accepted. Siguiente:`checkout-review`.

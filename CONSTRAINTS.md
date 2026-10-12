@@ -19,6 +19,8 @@ Reglas durables que las features futuras deben respetar.
 - **Validar en servidor la variante y `stock > 0` antes de crear o incrementar un `CartItem`, dentro de una transacción Prisma; no confiar en precio, nombre o stock del navegador.** Razón: la selección del cliente es no confiable y el carrito debe mantener una única línea por variante.
 - **El carrito no reserva ni descuenta stock y puede acumular una cantidad superior al stock vigente; checkout debe revalidar antes de cobrar.** Razón: añadir al carrito expresa intención y no garantiza disponibilidad futura.
 - **Mantener cada `CartItem.quantity` entre 1 y `2_147_483_647` y rechazar una suma acumulada que exceda ese máximo antes de cualquier escritura.** Razón: Prisma representa `Int` como Int32 y un desbordamiento tardío produciría un 500 o una mutación parcial.
+- **Leer y mutar el carrito de invitado solo mediante `cart_guest_token` existente en `/cart`, `PATCH` y `DELETE`; esas operaciones no deben crear cookie ni fila `Cart` nuevas.** Razón: revisar o corregir una identidad ausente no debe crear carritos huérfanos ni cambiar el estado durable de un visitante.
+- **Construir cada snapshot y subtotal desde `Variant.priceCents` en enteros seguros, con una línea única por variante y sin confiar en precios del navegador.** Razón: el cliente solo expresa cantidad; el servidor conserva la exactitud monetaria y evita overflow en totales.
 
 ## MUST NOT
 

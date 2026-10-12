@@ -59,6 +59,17 @@ revalidar el stock vigente. La cantidad de cada `CartItem` permanece dentro del
 máximo Int32 de Prisma (`2_147_483_647`); un alta que desbordaría esa suma devuelve
 `400` antes de mutar el carrito.
 
+`/cart` lee el carrito por la misma cookie en un Server Component y transforma las
+líneas en un snapshot plano (`CartView`) con producto, talla, color, precio de la
+variante, cantidad, subtotal de línea y subtotal general. `PATCH` y `DELETE`
+`/api/cart/items` exigen una cookie existente, validan un cuerpo cerrado y ejecutan
+la actualización o eliminación dentro de una transacción sin crear una identidad
+nueva; ambos devuelven el snapshot recalculado con `Cache-Control: no-store`. Los
+precios y sumas se calculan desde `Variant.priceCents` con enteros seguros. La isla
+`CartItemControls` usa `credentials: "same-origin"` y `router.refresh()` tras una
+mutación correcta; el estado del carrito no se copia a `localStorage` ni reserva
+stock.
+
 ## Decisions
 
 - **ORM**: Prisma (v6) con SQLite, decisión tomada en `bootstrap-stack`. `DATABASE_URL="file:./dev.db"`. Alternativa evaluada: Drizzle; descartada por familiaridad y tooling de migraciones integrado de Prisma.
