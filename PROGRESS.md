@@ -2,13 +2,13 @@
 
 ## Estado verificado actual
 
-- Raíz del repositorio: `/Users/juan/Documents/EDICION-5/harness/ai-expert-project`
+- Raíz del repositorio: `/Users/antonio/Projects/devexpert-io/ai-expert-project`
 - Ruta estándar de arranque: `./init.sh`
 - Ruta estándar de verificación: `./init.sh` (gate: install + lint + typecheck + test + build; no bloqueante, sin dev servers)
 - Arranque local: `pnpm dev`
-- Siguiente paso: planificar `cart-add` con `feature-spec`
+- Siguiente paso: planificar `cart-manage` con `feature-spec`
 - Bloqueador actual: ninguno
-- Última verificación: `tryon-result` aceptada por decisión explícita del usuario (2026-09-07) tras prueba manual; se omitieron gate `./init.sh` y rol validator
+- Última verificación: `cart-add` aceptada por validator independiente (2026-10-12); gate completo 169 tests y navegador 390×844/1280×800.
 
 ## Registro de sesión
 
@@ -279,3 +279,45 @@
 - Estado: feature `tryon-result` en `accepted`.
 - Riesgo o cuestión no resuelta: el gate completo no se reejecutó en esta sesión; la calidad visual real del `image-edit` no se midió.
 - Siguiente mejor paso: ejecutar `feature-spec` para `cart-add`.
+
+### Sesión 016 — `cart-add`
+
+- Fecha: 2026-10-12
+- Objetivo: permitir que un invitado añada una variante exacta disponible al carrito, acumulando cantidades y conservando el carrito mediante cookie HTTP-only y SQLite.
+- Completado:
+  - `src/lib/cart.ts`: contrato cerrado `{ variantId, quantity }`, límite de 8 KiB y mensajes seguros.
+  - `src/lib/server/cart.ts`: resolución server-only de variante/stock, `Cart` por `guestToken`, `CartItem` único con `upsert` incremental y total de unidades dentro de una transacción.
+  - `src/app/api/cart/items/route.ts`: `POST` Node, control de Origin, cookie `cart_guest_token` HttpOnly/SameSite=Lax/Path=/Max-Age=2592000/Secure en producción, `no-store`, estados 400/404/409/413/500.
+  - `CartAddForm` cliente accesible integrado únicamente para una pareja exacta disponible; agotada, parcial o inexistente no monta CTA. Añadido `src/app/icon.svg` para eliminar el 404 de favicon durante QA.
+  - Actualizados `ARCHITECTURE.md`, `CONSTRAINTS.md`, `docs/technical-discovery.md`, `docs/risks-and-open-questions.md`, tests focalizados y evidencia de feature.
+- Verificación ejecutada y evidencia:
+  - `CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3; DB setup/verify, lint, typecheck, 24 archivos y 163 tests, build. Log: `/tmp/ai-expert-cart-add-gate-20261012.log`.
+  - `git diff --check` → exit 0; sin `localStorage`, secretos, token en JSON, mutación de stock, auth, checkout ni cambios de schema/seed/dependencias.
+  - Smoke navegador con helper MCP y servidor propio `http://localhost:4317`: a 390x844 se añadieron 2 unidades, se recargó y se añadió 1 con la cookie persistida; las respuestas fueron 200 (`quantity=3`, `itemCount=3`) y SQLite mostró una sola línea `CAM-BAS-S-NEGRO` de cantidad 3 para el token probado. M/Negro agotada: CTA ausente y API directa 409 sin línea.
+  - QA a 390x844 y 1280x800: sin overflow horizontal, labels/foco/targets/status correctos; navegación limpia con consola sin errores y peticiones 200. Capturas: `/tmp/cart-add-390.png` y `/tmp/cart-add-1280.png`.
+- Estado: `cart-add` en `passing`, pendiente de validación independiente; no `accepted`.
+- Riesgo o cuestión no resuelta: el carrito no reserva ni descuenta stock; `cart-manage`/checkout debe revalidar cantidades antes de cobrar. Los avisos conocidos de pnpm/Prisma no afectan al gate.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `cart-add` y, tras su aceptación, planificar `cart-manage`.
+
+### Sesión 017 — `cart-add` reparación de overflow
+
+- Fecha: 2026-10-12
+- Motivo: el validator detectó que una cantidad por encima del rango Int32 de `CartItem.quantity`, o una suma acumulada que lo excediera, podía terminar en un error 500 de Prisma.
+- Completado:
+  - `CART_QUANTITY_MAX = 2_147_483_647` aplicado al parser, servicio server-only y atributo `max` del formulario.
+  - Validación de la cantidad inicial y de `existing + quantity` antes de cualquier `Cart`/`CartItem` write; el endpoint responde 400 seguro con `Cache-Control: no-store`.
+  - Tests de máximo válido, máximo+1 inicial y overflow acumulado; spec y documentación actualizadas con el límite.
+- Verificación ejecutada y evidencia:
+  - `CI=true ./init.sh` → exit 0 con Node v22.23.2/pnpm 10.18.3, 24 archivos y 169 tests, lint, typecheck y build. Log: `/tmp/ai-expert-cart-add-overflow-gate-20261012.log`.
+  - Endpoint real aislado en `http://localhost:4327` con DB temporal `/tmp/ai-expert-cart-overflow-20261012.db`: `quantity=2_147_483_647` → 200; el mismo token con `+1` → 400 no-store sin `Set-Cookie` y la fila quedó en el máximo; `quantity=2_147_483_648` → 400 sin crear fila.
+  - El smoke visual anterior a 390x844/1280x800 sigue siendo válido: la reparación solo añade el límite coherente del control de cantidad, sin cambiar el flujo ni el layout.
+- Estado: `cart-add` en `passing`, pendiente de revalidación independiente; no `accepted`.
+- Riesgo: el carrito no reserva ni descuenta stock; `cart-manage`/checkout debe revalidar disponibilidad y cantidades antes de cobrar.
+- Siguiente mejor paso: ejecutar `feature-validator` sobre `cart-add`.
+
+### Aceptación independiente — `cart-add`
+
+- Fecha: 2026-10-12. Validator: `accept` tras reparación del overflow Int32.
+- Verificación independiente: 42 tests focalizados; gate post-fix inspeccionado (169 tests); endpoint concurrente sobre max−1 dio 200/400 y fila final max; agregado de dos líneas max correcto.
+- UI validada a 390×844 y 1280×800 en localhost:4317 sobre cambios de esta feature; aceptación antes del commit.
+- Estado: `cart-add` accepted. Siguiente: `cart-manage`.

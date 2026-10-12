@@ -9,7 +9,7 @@
 ## Implementation-Time Questions
 
 - ¿Qué estados tiene un `Pedido` completo (enviado/entregado/devuelto) o basta con `Pagado`/`Cancelado`?
-- ¿El carrito debe persistir en servidor para usuarios y solo en localStorage para invitados?
+- **Carrito de invitado resuelto (`cart-add`)**: persiste en SQLite mediante `Cart`/`CartItem` y una cookie `cart_guest_token` HTTP-only, SameSite=Lax y de 30 días. No se usa `localStorage`; la futura asociación a `User` queda para checkout.
 - ¿Dónde se guardan/almacenan las imágenes *generadas* del try-on?
   **Resuelto (`tryon-result`)**: data URL efímera en memoria; no disco, no
   URL temporal persistida, no fila `TryonImage`. Recargar descarta el resultado.
@@ -41,6 +41,7 @@
 
 - **Try-on realista** (alto): resultado poco fiel o rechazo del endpoint de edición de imagen; mitigar con proveedor/modelo configurable y expectativas acotadas.
 - **Cupo semanal de IA**: uso limitado por clave y por semana; peticiones rechazadas al 100%. Mitigar con modos sin clave, mensajes claros y evitando abusos.
+- **Stock entre carrito y checkout** (medio): el alta comprueba `stock > 0`, pero no reserva ni descuenta unidades y permite acumular intención por encima del stock vigente. Mitigar revalidando las cantidades en `cart-manage`/checkout antes de cobrar.
 - **Privacidad**: la foto del usuario viaja a `inference.devexpert.io` en
   `tryon-result`; mitigado con aviso + consentimiento revalidado en servidor y
   sin persistir foto ni resultado. La calidad visual realista sigue siendo un

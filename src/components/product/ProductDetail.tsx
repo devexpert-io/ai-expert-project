@@ -6,6 +6,7 @@ import type {
   ProductDetail as ProductDetailViewModel,
   ProductSelection,
 } from "../../lib/server/product-detail";
+import { CartAddForm } from "../cart/CartAddForm";
 import { TryOnUpload } from "../tryon/TryOnUpload";
 
 import styles from "./product-detail.module.css";
@@ -195,6 +196,10 @@ export default function ProductDetail({
           >
             {getSelectionMessage(selection)}
           </p>
+
+          {selection.variant && selection.variant.stock > 0 ? (
+            <CartAddForm variantId={selection.variant.id} />
+          ) : null}
 
           <TryOnUpload
             color={selection.color}

@@ -1,0 +1,86 @@
+.form {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 22px;
+}
+
+.quantityGroup {
+  display: grid;
+  gap: 8px;
+  max-width: 10rem;
+}
+
+.quantityGroup label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.quantityInput {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid #aaa195;
+  border-radius: 0;
+  background: var(--color-background);
+  color: var(--color-primary);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.quantityInput:focus-visible,
+.submitButton:focus-visible {
+  outline: 3px solid #c4714e;
+  outline-offset: 3px;
+}
+
+.submitButton {
+  min-height: 50px;
+  width: fit-content;
+  border: 1px solid var(--color-primary);
+  border-radius: 0;
+  background: var(--color-primary);
+  color: #fffaf2;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 11px 22px;
+}
+
+.submitButton:hover:not(:disabled) {
+  border-color: var(--color-accent-dark);
+  background: var(--color-accent-dark);
+}
+
+.submitButton:disabled,
+.quantityInput:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.success,
+.error {
+  margin: 0;
+  border-left: 3px solid currentcolor;
+  background: #ede8de;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 13px 15px;
+}
+
+.success {
+  color: var(--color-olive);
+}
+
+.error {
+  color: #8b2c22;
+}
+
+@media (max-width: 479px) {
+  .submitButton {
+    width: 100%;
+  }
+}

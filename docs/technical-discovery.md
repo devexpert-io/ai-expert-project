@@ -59,7 +59,7 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 ## Authentication and Authorization
 
-- Sesión de invitado anónima (cookie/localStorage) para el carrito.
+- Sesión de invitado anónima mediante cookie HTTP-only para el carrito; el estado durable vive en SQLite y no en `localStorage`.
 - Registro/login de usuario en el checkout vía credenciales (email + password). Considerar almacenar hash (p. ej. bcrypt) y sesión con cookie.
 - Los pedidos solo son visibles para el usuario propietario.
 
@@ -78,6 +78,22 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 - Smoke test del flujo de compra y de las funciones de IA con clave real o mock.
 - Gate local reproducible: `pnpm db:setup`, `pnpm db:verify`, lint +
   typecheck + tests + build desde `./init.sh`.
+
+## Contrato implementado del carrito anónimo (`cart-add`)
+
+- `POST /api/cart/items` recibe únicamente `{ variantId, quantity }` como JSON;
+  el cuerpo se limita a 8 KiB, se rechazan campos extra, cantidades no enteras o
+  no positivas y `Origin` explícito ajeno. Todas las respuestas llevan
+  `Cache-Control: no-store`.
+- El servidor genera `cart_guest_token` cuando falta y lo emite como cookie
+  `HttpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age=2592000` y `Secure` en producción.
+  La cookie se reutiliza al recargar y una fila sin carrito asociado se crea con el
+  mismo token.
+- `src/lib/server/cart.ts` resuelve la variante y su stock dentro de una transacción,
+  rechaza inexistentes (`404`) y agotadas (`409`), y hace `upsert` de la única línea
+  `(cartId, variantId)` acumulando cantidad. Acepta cantidades de 1 a `2_147_483_647`
+  y devuelve `400` antes de escribir si la suma de una línea desbordaría ese máximo.
+  No devuelve precios ni datos de Prisma, no reserva stock y no crea usuarios.
 
 ## Observability
 

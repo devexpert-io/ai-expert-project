@@ -15,12 +15,17 @@ Reglas durables que las features futuras deben respetar.
 - **Mantener el seed idempotente y no destructivo**: solo actualiza el fixture de categorías, productos y variantes por sus claves estables; no borrar ni modificar usuarios, carritos, pedidos, chats o imágenes. Razón: permitir repetir el arranque sin perder trabajo local.
 - **Mantener el proveedor de IA server-only**: leer `DEVEXPERT_API_KEY`, base URL y modelos únicamente desde módulos bajo `src/lib/server/ai/`; no importar esos módulos desde componentes cliente. Razón: impedir que secretos o configuración privada lleguen al bundle del navegador.
 - **Degradar el proveedor de IA de forma tipada y sin reintentos automáticos**: mapear errores de configuración, autenticación, cupo, red y proveedor a códigos/mensajes constantes y seguros. Razón: las features posteriores deben poder funcionar sin clave o servicio disponible.
+- **Identificar el carrito de invitado únicamente con `cart_guest_token` HTTP-only, SameSite=Lax, Path=/ y caducidad de 30 días**; el token lo genera el servidor y no se acepta en el cuerpo. Razón: conservar el carrito entre recargas sin exponer identidad o estado durable al cliente.
+- **Validar en servidor la variante y `stock > 0` antes de crear o incrementar un `CartItem`, dentro de una transacción Prisma; no confiar en precio, nombre o stock del navegador.** Razón: la selección del cliente es no confiable y el carrito debe mantener una única línea por variante.
+- **El carrito no reserva ni descuenta stock y puede acumular una cantidad superior al stock vigente; checkout debe revalidar antes de cobrar.** Razón: añadir al carrito expresa intención y no garantiza disponibilidad futura.
+- **Mantener cada `CartItem.quantity` entre 1 y `2_147_483_647` y rechazar una suma acumulada que exceda ese máximo antes de cualquier escritura.** Razón: Prisma representa `Int` como Int32 y un desbordamiento tardío produciría un 500 o una mutación parcial.
 
 ## MUST NOT
 
 - **No commitear claves/secrets** (p. ej. `DEVEXPERT_API_KEY`) ni el archivo `.env`. Las claves van en `.env` (ignorado) y se documentan en `.env.example` (commiteado). Razón: seguridad y formación AI Expert (clave personal).
 - **No exponer `DEVEXPERT_API_KEY` ni cuerpos/headers de errores en `NEXT_PUBLIC_*`, logs o respuestas públicas**. Razón: preservar credenciales y datos de prompts/respuestas frente al navegador.
 - **No crear cuentas demo ni datos reales en el seed**; los usuarios, carritos, pedidos, chats e imágenes se crean en sus features y flujos propios. Razón: evitar que credenciales o pedidos de ejemplo aparezcan en producción.
+- **No persistir el estado del carrito de invitado en `localStorage` ni aceptar un token de carrito en el JSON público.** Razón: la identidad y la persistencia del carrito viven en SQLite detrás de la cookie HTTP-only.
 - **No truncar la base ni ejecutar `prisma migrate reset` durante el arranque**. Razón: preservar datos locales y permitir que el setup sea seguro de repetir.
 - **No añadir despliegue cloud ni CI remoto** en el MVP; solo scripts locales. Razón: non-goal del slice.
 
