@@ -33,7 +33,7 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 - **URL base**: `https://inference.devexpert.io/v1`.
 - **Clave**: variable de entorno `DEVEXPERT_API_KEY` (no commitear; usar `.env` y `.env.example`). Sin clave, las funciones de IA degradan con un mensaje claro.
-- **Configuración**: `DEVEXPERT_BASE_URL` (por defecto `https://inference.devexpert.io/v1`), `DEVEXPERT_CHAT_MODEL` (`chat`), `DEVEXPERT_CHAT_PRO_MODEL` (`chat-pro`), `DEVEXPERT_IMAGE_MODEL` (`image-edit`) y `DEVEXPERT_EMBEDDING_MODEL` (`embedding`). Los valores se recortan y la base URL debe ser absoluta HTTP(S).
+- **Configuración**: `DEVEXPERT_BASE_URL` (por defecto `https://inference.devexpert.io/v1`), `DEVEXPERT_CHAT_MODEL` (`chat`), `DEVEXPERT_IMAGE_MODEL` (`image-edit`) y `DEVEXPERT_EMBEDDING_MODEL` (`embedding`). Los valores se recortan y la base URL debe ser absoluta HTTP(S).
 - **Compatibilidad**: al ser OpenAI-compatible, funciona con el cliente oficial `openai` (SDK TypeScript/Python) solo cambiando `apiKey` y `baseURL`.
 - **Límites**: cada clave tiene un uso semanal que se repone solo; al llegar al 100% las peticiones se rechazan hasta el reseteo. La app debe manejar el error 429/uso y mostrarlo con claridad.
 - **Frontera**: `src/lib/server/ai/config.ts` y `provider.ts` son módulos `server-only`; el cliente se crea de forma lazy, no se llama durante construcción y usa `maxRetries: 0`. El adapter no devuelve la clave ni errores crudos.
@@ -41,7 +41,7 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 
 ### Chatbot IA
 - Endpoint `POST /chat/completions` (OpenAI-compatible).
-- Modelo diario: `chat`. Para tareas complejas: `chat-pro`.
+- Modelo de chat: `chat`.
 - Inyectar directamente el catálogo pequeño en el prompt para recomendar productos válidos; la salida usa JSON con IDs y se reconstruye en servidor, sin embeddings/RAG por ahora.
 - La búsqueda semántica vía embeddings queda fuera mientras el catálogo siga siendo pequeño; la calidad subjetiva del modelo real sigue pendiente de probar con una clave real.
 
@@ -218,7 +218,7 @@ Toda la IA se sirve desde **DevExpert Inference**, un gateway compatible con Ope
 - **Debe ejecutarse en local con un comando**: sin servicios externos obligatorios, sin base de datos remota.
 - **Formación / AI Expert**: cada estudiante trae su propia `DEVEXPERT_API_KEY`. La app debe leerla de env y funcionar sin ella (degradación controlada de las funciones de IA).
 - Claves de IA externas: opcionales para arrancar; si no hay clave, las funciones de IA deben degradar con un mensaje claro (fallo controlado) y manejar el límite de uso semanal.
-- **Uso semanal limitado**: no abusar de `chat-pro` ni de generaciones de imagen; dar mensajes claros cuando se agote el cupo.
+- **Uso semanal limitado**: no abusar de las generaciones de imagen; dar mensajes claros cuando se agote el cupo.
 - Privacidad de la foto del try-on: se sube al gateway `inference.devexpert.io`; documentar y tratar como dato personal.
 
 ## Referencias

@@ -31,7 +31,6 @@ describe("readAiConfig", () => {
       DEVEXPERT_API_KEY: `  ${secret}  `,
       DEVEXPERT_BASE_URL: "  https://ai.example.test/v1///  ",
       DEVEXPERT_CHAT_MODEL: "  custom-chat  ",
-      DEVEXPERT_CHAT_PRO_MODEL: " custom-chat-pro ",
       DEVEXPERT_IMAGE_MODEL: " custom-image ",
       DEVEXPERT_EMBEDDING_MODEL: " custom-embedding ",
     });
@@ -40,7 +39,6 @@ describe("readAiConfig", () => {
       baseUrl: "https://ai.example.test/v1",
       models: {
         chat: "custom-chat",
-        chatPro: "custom-chat-pro",
         image: "custom-image",
         embedding: "custom-embedding",
       },
@@ -69,7 +67,7 @@ describe("readAiConfig", () => {
     expect(
       readAiConfig({
         DEVEXPERT_CHAT_MODEL: " ",
-        DEVEXPERT_CHAT_PRO_MODEL: "\t",
+        DEVEXPERT_IMAGE_MODEL: "\t",
       }).models,
     ).toEqual(DEFAULT_AI_MODELS);
 

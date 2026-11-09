@@ -142,7 +142,7 @@ como texto React escapado, sin HTML/Markdown ni URLs proporcionadas por el model
 2. Extender el prompt para pedir un objeto JSON estricto con `{ reply, recommendations }`.
    Cada candidato usa solo `productId` y opcionalmente `variantId`; máximo tres,
    sin nombres/precios/URLs generados. Para una consulta no recomendatoria debe
-   devolver una lista vacía. El modelo continúa usando `models.chat`, no `chat-pro`.
+   devolver una lista vacía. El modelo continúa usando `models.chat`.
 3. En un servicio server-only, parsear y validar la salida. Resolver todos los IDs
    contra el mismo catálogo fresco (o un mapa derivado de él), exigir que la variante
    pertenezca al producto, descartar duplicados y stock cero, y limitar a tres. La
