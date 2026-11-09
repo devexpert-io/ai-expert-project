@@ -4,7 +4,7 @@
 
 - **Calidad/viabilidad del try-on realista**. Probarse una prenda sobre la propia foto es muy costoso técnicamente; DevExpert Inference expone la edición de imagen (`image-edit`) pero no garantiza un try-on virtual fiel. Acotar expectativas y configurar prompt/modelo antes de construir el feature. (Ver Research Tasks.)
 - **Idioma de la interfaz** de la tienda. Asumimos español; confirmar para textos UI.
-- **Cupo semanal compartido**: las funciones de IA comparten el límite semanal de cada clave; definir cómo manejar el agotamiento (mensaje claro) y evitar abusos de `chat-pro`/imagen.
+- **Cupo semanal compartido**: las funciones de IA comparten el límite semanal de cada clave; definir cómo manejar el agotamiento (mensaje claro) y evitar abusos de imagen.
 
 ## Implementation-Time Questions
 

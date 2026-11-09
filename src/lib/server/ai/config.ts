@@ -4,14 +4,12 @@ export const DEFAULT_AI_BASE_URL = "https://inference.devexpert.io/v1";
 
 export const DEFAULT_AI_MODELS = {
   chat: "chat",
-  chatPro: "chat-pro",
   image: "image-edit",
   embedding: "embedding",
 } as const;
 
 export type AiModels = Readonly<{
   chat: string;
-  chatPro: string;
   image: string;
   embedding: string;
 }>;
@@ -84,10 +82,6 @@ export function readAiConfig(env: AiEnvironment = process.env): AiConfig {
   const baseUrl = parseBaseUrl(env.DEVEXPERT_BASE_URL);
   const models = {
     chat: parseModel(env.DEVEXPERT_CHAT_MODEL, DEFAULT_AI_MODELS.chat),
-    chatPro: parseModel(
-      env.DEVEXPERT_CHAT_PRO_MODEL,
-      DEFAULT_AI_MODELS.chatPro,
-    ),
     image: parseModel(env.DEVEXPERT_IMAGE_MODEL, DEFAULT_AI_MODELS.image),
     embedding: parseModel(
       env.DEVEXPERT_EMBEDDING_MODEL,
@@ -97,7 +91,6 @@ export function readAiConfig(env: AiEnvironment = process.env): AiConfig {
   const hasInvalidValue =
     baseUrl.invalid ||
     models.chat.invalid ||
-    models.chatPro.invalid ||
     models.image.invalid ||
     models.embedding.invalid;
   const hasApiKey = Boolean(optionalValue(env.DEVEXPERT_API_KEY));
@@ -112,7 +105,6 @@ export function readAiConfig(env: AiEnvironment = process.env): AiConfig {
     baseUrl: baseUrl.value,
     models: {
       chat: models.chat.value,
-      chatPro: models.chatPro.value,
       image: models.image.value,
       embedding: models.embedding.value,
     },

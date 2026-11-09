@@ -66,4 +66,4 @@ Un flujo vertical completo y verificable:
 
 - Lenguaje de documentos: español.
 - Idioma de la interfaz: por confirmar (asumimos español; no es restrictivo para el MVP).
-- Formación AI Expert: la IA se sirve desde **DevExpert Inference** (`https://inference.devexpert.io/v1`), gateway compatible con OpenAI. Cada estudiante usa su propia `DEVEXPERT_API_KEY` de `.env`; chatbot con modelo `chat`/`chat-pro` y try-on con edición de imagen (`image-edit`). El proveedor debe ser configurable.
+- Formación AI Expert: la IA se sirve desde **DevExpert Inference** (`https://inference.devexpert.io/v1`), gateway compatible con OpenAI. Cada estudiante usa su propia `DEVEXPERT_API_KEY` de `.env`; chatbot con modelo `chat` y try-on con edición de imagen (`image-edit`). El proveedor debe ser configurable.

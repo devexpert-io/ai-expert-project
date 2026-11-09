@@ -38,11 +38,10 @@ Cuando ejecuto la tienda con o sin mi clave de AI Expert, quiero que el servidor
 Given un entorno servidor sin `DEVEXPERT_API_KEY`
 When se lee la configuración
 Then no lanza excepción, usa `https://inference.devexpert.io/v1` y los modelos
-`chat`, `chat-pro`, `image-edit` y `embedding` para chat, chat avanzado, imagen y
-embeddings. El objeto público no contiene la clave.
+`chat`, `image-edit` y `embedding` para chat, imagen y embeddings. El objeto público no contiene la clave.
 
 Given valores no vacíos para `DEVEXPERT_BASE_URL`,
-`DEVEXPERT_CHAT_MODEL`, `DEVEXPERT_CHAT_PRO_MODEL`, `DEVEXPERT_IMAGE_MODEL` y
+`DEVEXPERT_CHAT_MODEL`, `DEVEXPERT_IMAGE_MODEL` y
 `DEVEXPERT_EMBEDDING_MODEL`
 When se lee la configuración
 Then se usan esos valores, normalizando la barra final, sin endpoint/modelo
@@ -134,7 +133,6 @@ Añadir a `.env.example` sin crear una clave real:
 | `DEVEXPERT_API_KEY` | vacío (desactivada) | secreto, solo servidor |
 | `DEVEXPERT_BASE_URL` | `https://inference.devexpert.io/v1` | configuración servidor |
 | `DEVEXPERT_CHAT_MODEL` | `chat` | configuración |
-| `DEVEXPERT_CHAT_PRO_MODEL` | `chat-pro` | configuración |
 | `DEVEXPERT_IMAGE_MODEL` | `image-edit` | configuración |
 | `DEVEXPERT_EMBEDDING_MODEL` | `embedding` | configuración |
 

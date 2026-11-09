@@ -146,7 +146,7 @@ seguro si el pedido es ajeno/inexistente o sus snapshots no son coherentes.
   `.env` se copia desde `.env.example` solo cuando falta. `pnpm db:verify`
   comprueba la estructura y los mínimos del fixture sin escribir en la base.
 - **Proveedor de IA**: `src/lib/server/ai/config.ts` normaliza y valida
-  `DEVEXPERT_BASE_URL` y los modelos (`chat`, `chat-pro`, `image-edit`,
+  `DEVEXPERT_BASE_URL` y los modelos (`chat`, `image-edit`,
   `embedding` por defecto) sin devolver la clave. `provider.ts` construye el
   cliente OpenAI solo al ejecutar una operación con clave válida, fija
   `maxRetries: 0` y devuelve degradaciones tipadas para errores de configuración,
